@@ -25,12 +25,14 @@
         },
         "./contract/machines.json": "./contract/machines.json",
         "./conformance/chat-v1.json": "./conformance/chat-v1.json",
+        "./scripts/check-no-prism.mjs": "./scripts/check-no-prism.mjs",
         "./package.json": "./package.json"
     },
     "files": [
         "dist",
         "contract",
         "conformance",
+        "scripts/check-no-prism.mjs",
         "README.md",
         "LICENSE",
         "CHANGELOG.md"

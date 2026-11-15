@@ -34,4 +34,6 @@ version number is not a stability promise until 1.0; read the entry.
   - The shared conformance fixture `conformance/chat-v1.json`, which
     `particle-academy/fancy-chat-php` passes to the same output.
   - A packaging check that fails on any Prism dependency, import or bundled
-    module, with a negative control that proves it fires.
+    module, with a negative control that proves it fires. It ships as
+    `@particle-academy/fancy-chat-js/scripts/check-no-prism.mjs`, so every other
+    core chat package runs this one checker rather than a copy.
