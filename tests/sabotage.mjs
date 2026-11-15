@@ -13,6 +13,15 @@ const root = fileURLToPath(new URL("..", import.meta.url));
 const file = (name) => fileURLToPath(new URL(`../${name}`, import.meta.url));
 
 const MUTATIONS = [
+  ["one thinking block per run", "src/projection.ts", "latest && (latest.live || event.type === \"thinking.completed\") ? latest : undefined;", "latest;"],
+  ["explicit thinking id ignored", "src/projection.ts", "const explicit = typeof data.thinkingId === \"string\" ? data.thinkingId : null;", "const explicit = null as string | null;"],
+  ["non-string thinking id accepted", "src/projection.ts", "if (data.thinkingId !== undefined && typeof data.thinkingId !== \"string\") {", "if (false) {"],
+  ["completed opens a block", "src/projection.ts", "        if (event.type === \"thinking.completed\") {\n          illegal();\n          break;\n        }\n        const thinkingId", "        const thinkingId"],
+  ["duration always exact", "src/projection.ts", "tool.durationExact = data.durationExact !== false;", "tool.durationExact = true;"],
+  ["any value makes it inexact", "src/projection.ts", "tool.durationExact = data.durationExact !== false;", "tool.durationExact = data.durationExact === true;"],
+  ["check-install skips exports", "scripts/check-install.mjs", "  walk(manifest.exports);\n", ""],
+  ["check-install passes on nothing", "scripts/check-install.mjs", "if (names.length === 0) {", "if (false) {"],
+  ["check-install exits 0 on a broken package", "scripts/check-install.mjs", "  process.exit(1);\n}\nconsole.log(", "}\nconsole.log("],
   ["unknown major accepted", "src/events.ts", "if (e.v !== 1) return", "if (e.v === 99) return"],
   ["seq zero accepted", "src/events.ts", "e.seq < 1)", "e.seq < 0)"],
   ["extension namespace optional", "src/events.ts", "/^x-[a-z0-9][a-z0-9-]*\\.[a-z0-9][a-z0-9._-]*$/", "/^x-[a-z0-9.-]+$/"],
@@ -46,7 +55,6 @@ const MUTATIONS = [
   ["actor need not be human", "src/projection.ts", "return canDecide(event.actor) && isPlainObject(claimed)", "return isPlainObject(claimed)"],
   ["supersede not marked", "src/projection.ts", "if (target) target.superseded = true;", ";"],
   ["text deltas replace", "src/projection.ts", 'current.text = String(current.text ?? "") + data.text;', "current.text = data.text;"],
-  ["thinking not merged per run", "src/projection.ts", "let entry = byId(state.thinking, \"runId\", runId);", "let entry: ThinkingEntry | undefined = undefined;"],
   ["duplicates kept", "src/sequence.ts", "if (event.seq <= lastSeq) continue;", "if (event.seq < lastSeq) continue;"],
   ["gaps not held", "src/sequence.ts", "for (let next = held.get(lastSeq + 1); next; next = held.get(lastSeq + 1)) {", "for (const next of [...held.values()].sort((a, b) => a.seq - b.seq)) {"],
   ["reset keeps stale held events", "src/sequence.ts", "for (const seq of [...held.keys()]) if (seq <= lastSeq) held.delete(seq);", ";"],

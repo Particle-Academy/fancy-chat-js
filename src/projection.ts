@@ -27,6 +27,12 @@ export interface TurnEntry {
 }
 
 export interface ThinkingEntry {
+  /**
+   * One run may think several times, between tool calls. Each block has its own id:
+   * the event's `data.thinkingId` when it sends one, else the run id for the run's
+   * first block and `<runId>#2`, `#3`... for the next.
+   */
+  thinkingId: string;
   runId: string;
   text: string;
   live: boolean;
@@ -41,6 +47,11 @@ export interface ToolEntry {
   progress: { fraction: number | null; text: string | null } | null;
   outcome: "ok" | "failure" | "refusal" | null;
   durationMs: number | null;
+  /**
+   * False when the backend could only bound the duration, not measure it (e.g. a
+   * Prism Harness step timed across a process hop): render it as "at most".
+   */
+  durationExact: boolean;
   outputRef: string | null;
   truncated: boolean;
   /**
@@ -252,15 +263,30 @@ export function applyEvent(state: ThreadState, event: ChatEvent): boolean {
     case "thinking.delta":
     case "thinking.completed": {
       const runId = event.runId ?? NO_RUN;
-      let entry = byId(state.thinking, "runId", runId);
+      if (data.thinkingId !== undefined && typeof data.thinkingId !== "string") {
+        illegal();
+        break;
+      }
+      const explicit = typeof data.thinkingId === "string" ? data.thinkingId : null;
+      // Without an explicit id: the run's newest block, unless it has completed and this
+      // event opens new thinking (started or delta). That is how one run's thinking
+      // interleaves with its tool calls: each stretch is its own block, in order.
+      const ofRun = state.thinking.filter((t) => t.runId === runId);
+      const latest = ofRun.length > 0 ? ofRun[ofRun.length - 1] : undefined;
+      let entry = explicit !== null ? byId(state.thinking, "thinkingId", explicit) : latest && (latest.live || event.type === "thinking.completed") ? latest : undefined;
       if (!entry) {
         if (event.type === "thinking.completed") {
           illegal();
           break;
         }
-        entry = { runId, text: "", live: true };
+        const thinkingId = explicit ?? (ofRun.length === 0 ? runId : `${runId}#${ofRun.length + 1}`);
+        if (byId(state.thinking, "thinkingId", thinkingId)) {
+          illegal();
+          break;
+        }
+        entry = { thinkingId, runId, text: "", live: true };
         state.thinking.push(entry);
-        state.order.push({ kind: "thinking", id: runId });
+        state.order.push({ kind: "thinking", id: thinkingId });
       }
       if (event.type === "thinking.started") entry.live = true;
       else if (event.type === "thinking.delta" && typeof data.text === "string") entry.text += data.text;
@@ -282,6 +308,7 @@ export function applyEvent(state: ThreadState, event: ChatEvent): boolean {
         progress: null,
         outcome: null,
         durationMs: null,
+        durationExact: true,
         outputRef: null,
         truncated: false,
         output: null,
@@ -312,6 +339,7 @@ export function applyEvent(state: ThreadState, event: ChatEvent): boolean {
       }
       tool.outcome = data.outcome;
       tool.durationMs = typeof data.durationMs === "number" ? data.durationMs : null;
+      tool.durationExact = data.durationExact !== false;
       tool.outputRef = typeof data.outputRef === "string" ? data.outputRef : null;
       tool.truncated = data.truncated === true;
       tool.output = typeof data.output === "string" ? data.output : null;
@@ -501,7 +529,7 @@ export function rowsOf(state: ThreadState): Row[] {
       const m = byId(state.messages, "id", id);
       if (m) rows.push({ kind, ...m });
     } else if (kind === "thinking") {
-      const t = byId(state.thinking, "runId", id);
+      const t = byId(state.thinking, "thinkingId", id);
       if (t) rows.push({ kind, id, ...t });
     } else if (kind === "tool") {
       const t = byId(state.tools, "toolCallId", id);

@@ -28,11 +28,15 @@
         "./scripts/check-no-prism.mjs": "./scripts/check-no-prism.mjs",
         "./package.json": "./package.json"
     },
+    "bin": {
+        "fancy-chat-check-install": "scripts/check-install.mjs"
+    },
     "files": [
         "dist",
         "contract",
         "conformance",
         "scripts/check-no-prism.mjs",
+        "scripts/check-install.mjs",
         "README.md",
         "LICENSE",
         "CHANGELOG.md"

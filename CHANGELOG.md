@@ -10,6 +10,27 @@ version number is not a stability promise until 1.0; read the entry.
 
 ### Added
 
+- **Several thinking blocks per run, in order.** A run that thinks, calls a tool
+  and thinks again now projects two thinking rows around the tool row, instead of
+  one block merged above it. Each `ThinkingEntry` has a `thinkingId`: the event's
+  `data.thinkingId` when it sends one, else the run id for the first block and
+  `<runId>#2`, `#3`... after. Without an explicit id, a `thinking.started` or
+  `thinking.delta` after the run's block completed opens the next block. A
+  non-string `thinkingId` is illegal. Rows key thinking by `thinkingId`.
+  **Changed shape:** the first block's id is still the run id, so a host that
+  looked a block up by run id still finds the first one; a host that relied on one
+  merged block per run now sees the later ones as their own rows.
+- **`durationExact` on a tool row.** `false` when the backend could only bound the
+  duration (`tool.result` `durationExact: false`), so a UI can show "at most";
+  anything else, including absence, is `true`.
+- **`fancy-chat-check-install`** (a bin, committed source, needs no build). A git
+  install under `ignore-scripts=true` skips `prepare` and arrives with no `dist`;
+  no postinstall can warn, because `ignore-scripts` skips that too. Run
+  `npx fancy-chat-check-install` from the host's root: it checks every installed
+  `@particle-academy` package's `main`, `module` and `exports` files, names each
+  missing one with the cause, and exits 1. Finding no packages fails too.
+- Fixture `7d382bf7...`; fancy-chat-php takes it.
+
 - **First release: the neutral agent-chat wire contract v1** (council change
   CC-fancy-0042). Nothing to migrate; this is new.
   - The v1 event envelope with a closed core type set and `x-<app>.<name>`
