@@ -51,6 +51,11 @@ version number is not a stability promise until 1.0; read the entry.
   - `turnsToCancelForBranch(state, supersededId)`: the unsettled turns a
     truncated branch must cancel, through its messages or its approvals.
     `ApprovalRecord` gains an optional `turnId`.
+  - Tool output inline: `tool.result` may carry `output` (the result text, or a
+    failure's own words) and `outputLanguage` (code, e.g. `json`). The projection
+    keeps both on the tool row (`null` when absent or not text). It is plain text:
+    render it as text or code, never HTML. The server bounds it and sets
+    `truncated`; `outputRef` points at the rest.
   - Installable from git: `prepare` builds `dist/`, so
     `npm install github:Particle-Academy/fancy-chat-js#<sha>` works before a release. It ships as
     `@particle-academy/fancy-chat-js/scripts/check-no-prism.mjs`, so every other

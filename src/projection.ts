@@ -43,6 +43,14 @@ export interface ToolEntry {
   durationMs: number | null;
   outputRef: string | null;
   truncated: boolean;
+  /**
+   * The result's text inline, as the tool or its failure wrote it (a failure's own
+   * words, not a generic "failed"). Plain text: render it as text or code, NEVER as
+   * HTML. The server bounds it and sets `truncated`; `outputRef` points at the rest.
+   */
+  output: string | null;
+  /** Set when the output is code (e.g. "json"), for a code view; null means plain text. */
+  outputLanguage: string | null;
 }
 
 export interface PlanStep {
@@ -276,6 +284,8 @@ export function applyEvent(state: ThreadState, event: ChatEvent): boolean {
         durationMs: null,
         outputRef: null,
         truncated: false,
+        output: null,
+        outputLanguage: null,
       });
       state.order.push({ kind: "tool", id: data.toolCallId });
       break;
@@ -304,6 +314,8 @@ export function applyEvent(state: ThreadState, event: ChatEvent): boolean {
       tool.durationMs = typeof data.durationMs === "number" ? data.durationMs : null;
       tool.outputRef = typeof data.outputRef === "string" ? data.outputRef : null;
       tool.truncated = data.truncated === true;
+      tool.output = typeof data.output === "string" ? data.output : null;
+      tool.outputLanguage = typeof data.outputLanguage === "string" ? data.outputLanguage : null;
       break;
     }
 
