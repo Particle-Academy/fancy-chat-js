@@ -48,6 +48,7 @@ export {
 export { createSeqLog, ingestEvents, type Gap, type IngestResult, type SeqLog } from "./sequence";
 export {
   applyEvent,
+  turnsToCancelForBranch,
   type BranchEntry,
   emptyThreadState,
   projectThread,

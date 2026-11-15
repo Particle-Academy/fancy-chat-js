@@ -44,6 +44,12 @@ version number is not a stability promise until 1.0; read the entry.
     approval, and the projection refuses any other release.
   - Edit and resend: the projection records each superseded branch in
     `state.branches` for the host's policy (branch by default, or truncate).
-  - `isTimestamp`, the one timestamp check every `at` and deadline uses. It ships as
+  - `isTimestamp`, the one timestamp check every `at` and deadline uses.
+  - The `decided` delivery state: the server took the message as a typed
+    decision (`sent` or `queued` --decide--> `decided`, final), so it was never
+    delivered to the agent.
+  - `turnsToCancelForBranch(state, supersededId)`: the unsettled turns a
+    truncated branch must cancel, through its messages or its approvals.
+    `ApprovalRecord` gains an optional `turnId`. It ships as
     `@particle-academy/fancy-chat-js/scripts/check-no-prism.mjs`, so every other
     core chat package runs this one checker rather than a copy.

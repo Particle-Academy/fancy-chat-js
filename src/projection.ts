@@ -465,6 +465,22 @@ export function applyEvent(state: ThreadState, event: ChatEvent): boolean {
   return true;
 }
 
+/**
+ * Under the truncate policy, the turns a removed branch must cancel: every
+ * UNSETTLED turn the branch references, through a message in it (the
+ * superseded message included) or an approval placed in it. In `state.turns`
+ * order. Settled turns and turns outside the branch are never touched.
+ */
+export function turnsToCancelForBranch(state: ThreadState, supersededId: string): string[] {
+  const branch = (state.branches ?? []).find((b) => b.supersededId === supersededId);
+  if (!branch) return [];
+  const ids = new Set([supersededId, ...branch.rowIds]);
+  const referenced = new Set<string>();
+  for (const m of state.messages) if (ids.has(m.id) && m.turnId) referenced.add(m.turnId);
+  for (const a of state.approvals) if (ids.has(a.approvalId) && typeof a.turnId === "string") referenced.add(a.turnId);
+  return state.turns.filter((t) => t.state !== "settled" && referenced.has(t.turnId)).map((t) => t.turnId);
+}
+
 /** The rows a thread renders, in order of first appearance. */
 export function rowsOf(state: ThreadState): Row[] {
   const rows: Row[] = [];

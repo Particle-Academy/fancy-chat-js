@@ -67,6 +67,12 @@ const MUTATIONS = [
   ["rejected step may run", "src/plan.ts", "if (REFUSED_BY.has(approval.state) && (after.status === \"skipped\" || after.status === \"failed\")) continue;", "if (REFUSED_BY.has(approval.state)) continue;"],
   ["projection skips the plan guard", "src/projection.ts", "if (!checkPlanUpdate(plan?.steps ?? [], data.steps as PlanStep[], state.approvals).ok) {", "if (false) {"],
   ["branch rows not recorded", "src/projection.ts", "state.branches.push({ supersededId: supersedes, byId: m.id, rowIds: state.order.slice(targetAt + 1).map((o) => o.id) });", ";"],
+  ["a decided message can still be delivered", "contract/machines.json", '{ "from": "queued", "action": "decide", "to": "decided" }', '{ "from": "queued", "action": "decide", "to": "decided" },\n      { "from": "decided", "action": "deliver", "to": "delivered" }'],
+  ["decide from sending", "contract/machines.json", '{ "from": "sent", "action": "decide", "to": "decided" },', '{ "from": "sent", "action": "decide", "to": "decided" },\n      { "from": "sending", "action": "decide", "to": "decided" },'],
+  ["branch cancels settled turns", "src/projection.ts", 'return state.turns.filter((t) => t.state !== "settled" && referenced.has(t.turnId)).map((t) => t.turnId);', "return state.turns.filter((t) => referenced.has(t.turnId)).map((t) => t.turnId);"],
+  ["branch cancels every unsettled turn", "src/projection.ts", 'return state.turns.filter((t) => t.state !== "settled" && referenced.has(t.turnId)).map((t) => t.turnId);', 'return state.turns.filter((t) => t.state !== "settled").map((t) => t.turnId);'],
+  ["branch ignores approvals", "src/projection.ts", 'for (const a of state.approvals) if (ids.has(a.approvalId) && typeof a.turnId === "string") referenced.add(a.turnId);', ";"],
+  ["branch skips the superseded message", "src/projection.ts", "const ids = new Set([supersededId, ...branch.rowIds]);", "const ids = new Set([...branch.rowIds]);"],
   ["packaging check misses source imports", "scripts/check-no-prism.mjs", "if (spec && PRISM.test(spec)) findings.push", "if (false) findings.push"],
   ["packaging check misses the manifest", "scripts/check-no-prism.mjs", "for (const name of names) if (PRISM.test(name))", "for (const name of names) if (false)"],
 ];

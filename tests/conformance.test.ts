@@ -15,6 +15,7 @@ import {
   checkPlanUpdate,
   matchTypedApproval,
   undoWindow,
+  turnsToCancelForBranch,
   transitionApproval,
   transitionDelivery,
   transitionTurn,
@@ -36,7 +37,7 @@ describe("fixture pins", () => {
     const sections = Object.entries(FIXTURES).filter(([, v]) => typeof v === "object" && v !== null && "legs" in (v as object));
     const js = sections.filter(([, v]) => (v as { legs: string[] }).legs.includes("js")).map(([k]) => k);
     expect(js.sort()).toEqual(
-      ["actionable", "approval", "decide", "delivery", "envelope", "optionTone", "parts", "planStep", "projection", "question", "reservedTools", "sequence", "status", "turn", "typedApproval", "undo"].sort(),
+      ["actionable", "approval", "branchTurns", "decide", "delivery", "envelope", "optionTone", "parts", "planStep", "projection", "question", "reservedTools", "sequence", "status", "turn", "typedApproval", "undo"].sort(),
     );
   });
 });
@@ -180,5 +181,13 @@ describe("plan-step HITL", () => {
   it.each(named(FIXTURES.planStep.cases, (c) => c.name))("%s", (_n, c) => {
     const r = checkPlanUpdate(c.prev, c.next, FIXTURES.planStep.approvals);
     expect({ ok: r.ok, error: r.ok ? null : r.error }).toEqual({ ok: c.ok, error: c.error });
+  });
+});
+
+describe("truncate: the turns a removed branch must cancel", () => {
+  const events = FIXTURES.branchTurns.events.map((e: Record<string, unknown>) => withDefaults(FIXTURES.projection.defaults, e)) as ChatEvent[];
+  const state = projectThread(events).state;
+  it.each(named(FIXTURES.branchTurns.cases, (c) => c.name))("%s", (_n, c) => {
+    expect(turnsToCancelForBranch(state, c.supersededId)).toEqual(c.expect);
   });
 });

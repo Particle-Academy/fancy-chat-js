@@ -30,7 +30,8 @@ export interface ChatEvent<TData = Record<string, unknown>> {
 export type TurnState = "pending" | "running" | "awaiting-human" | "cancelling" | "settled";
 export type TurnOutcome = "completed" | "failed" | "refused" | "cancelled" | "interrupted";
 
-export type DeliveryState = "sending" | "sent" | "queued" | "steered" | "delivered" | "failed" | "dropped" | "unsent";
+/** `decided`: the server took the message as a typed decision; it was never delivered to the agent. */
+export type DeliveryState = "sending" | "sent" | "queued" | "steered" | "delivered" | "decided" | "failed" | "dropped" | "unsent";
 
 export type ApprovalState =
   | "pending"
@@ -70,6 +71,8 @@ export interface ApprovalOption {
 export interface ApprovalRecord {
   approvalId: string;
   runId?: string | null;
+  /** The turn the approval parked, when the server knows it. */
+  turnId?: string | null;
   toolCallId?: string | null;
   title: string;
   summary: string;
