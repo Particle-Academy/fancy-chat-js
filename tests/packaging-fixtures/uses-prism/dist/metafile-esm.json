@@ -1,0 +1,1 @@
+{ "inputs": { "src/adapter.js": { "bytes": 1, "imports": [{ "path": "@particle-academy/prism-acp", "kind": "import-statement", "external": true }] } }, "outputs": {} }

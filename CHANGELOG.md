@@ -7,3 +7,31 @@ All notable changes to this project are documented here, in
 version number is not a stability promise until 1.0; read the entry.
 
 ## [Unreleased]
+
+### Added
+
+- **First release: the neutral agent-chat wire contract v1** (council change
+  CC-fancy-0042). Nothing to migrate; this is new.
+  - The v1 event envelope with a closed core type set and `x-<app>.<name>`
+    extensions; an unknown major is refused and unknown fields are ignored.
+  - Resumable replay on the client: `createSeqLog` / `ingestEvents` drop
+    duplicates, hold events past a gap and report it, and honour
+    `thread.reset`.
+  - Typed message parts (`text`, `code`, `table`, `chart`, `file`, `image`,
+    `tool-call`, `tool-result`, `card`, `question`, `approval`) with an app part
+    registry, plain-text forms and configurable size, count and depth caps.
+    Charts take the neutral spec; raw ECharts options are accepted only from
+    server code.
+  - The turn, delivery and approval machines in one shared table,
+    `contract/machines.json`.
+  - HITL helpers: human-only `canDecide`, reserved confirmation tool names,
+    `canSubmitAnswer`, single-actionable `pickActionable`, and button tone from
+    the option kind.
+  - `deriveAgentStatus`, one pure status derivation with host-overridable
+    recovery actions.
+  - `projectThread` / `applyEvent`: a pure, idempotent projection into rows.
+    Decisions and answers count only from a human actor.
+  - The shared conformance fixture `conformance/chat-v1.json`, which
+    `particle-academy/fancy-chat-php` passes to the same output.
+  - A packaging check that fails on any Prism dependency, import or bundled
+    module, with a negative control that proves it fires.

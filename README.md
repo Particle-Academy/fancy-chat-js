@@ -1,3 +1,67 @@
-# fancy-chat-js
+# @particle-academy/fancy-chat-js
 
-Part of the Fancy agent-chat framework (CC-fancy-0042). Being built; not published.
+The neutral wire contract for the Fancy agent chat framework (council change
+CC-fancy-0042). It is what an agent backend emits, what a server stores and
+replays, and what a chat UI projects into rows. Zero runtime dependencies,
+isomorphic (browser, worker, Node), and **provider-neutral**: it works with any
+agent backend, or none. The Prism ecosystem is an optional addon in
+`@particle-academy/fancy-chat-prism`; this package never imports it, and a
+packaging test enforces that.
+
+The PHP twin, `particle-academy/fancy-chat-php`, passes the same conformance
+fixture (`conformance/chat-v1.json`) to the same output, and vendors the same
+transition table (`contract/machines.json`). Both files are pinned by SHA-256 in
+both repositories.
+
+**Not yet published.** Status: phase P1 of `.ai/plans/agent-chat-framework.md`.
+
+## What it holds
+
+| Module | What |
+|---|---|
+| Events | v1 envelope (`validateEvent`): `seq` is per thread, monotonic and gapless, and is the only ordering. Core types are a closed set; apps add `x-<app>.<name>`. An unknown major is refused, unknown fields are ignored. |
+| Resumable replay | `createSeqLog` / `ingestEvents`: drop duplicates, hold events past a gap and report it, so the transport re-requests `after = lastSeq`. `thread.reset` jumps the cursor. A missed broadcast costs nothing. |
+| Parts | `validatePart`, `partToText`, `createPartRegistry`: `text`, `code`, `table`, `chart`, `file`, `image`, `tool-call`, `tool-result`, `card`, `question`, `approval`, plus app kinds. Size, count and depth caps are configurable. |
+| Turn machine | `transitionTurn`, from `contract/machines.json`. Only `turn.settled` settles a turn; no client infers it from rows. |
+| Delivery | `transitionDelivery`: `sending`, `sent`, `queued`, `steered`, `delivered`, `failed`, `dropped`, `unsent`. |
+| HITL | `transitionApproval`, `optionTone` (tone from the option KIND, never its label), `canDecide` (humans only), `isReservedToolName`, `canSubmitAnswer`, `pickActionable` (one actionable item, in-flight lock). |
+| Status | `deriveAgentStatus(snapshot, config)`: one pure derivation of `not-started`, `starting`, `working`, `cooling`, `idle`, `sleeping`, `parked`, `paused-limit`, `signed-out`, `broken`, each with recovery action ids the host can override. |
+| Projection | `projectThread(events)` / `applyEvent(state, event)`: messages, one merged thinking block per run, tool rows, plans and HITL placements. The state is plain JSON and is the snapshot format. |
+
+## Two rules the projection enforces
+
+- **A decision or answer counts only from a human.** `approval.decided` and
+  `question.answered` are applied only when the event's actor is a human and the
+  recorded decider is that same human. Anything else is counted as illegal and
+  changes nothing.
+- **Approval and question parts come only from server records.** An agent-origin
+  part of either kind fails validation, and so do raw ECharts options: an agent
+  may only send the neutral chart spec.
+
+## Use
+
+```ts
+import { createSeqLog, ingestEvents, emptyThreadState, applyEvent, rowsOf } from "@particle-academy/fancy-chat-js";
+
+let log = createSeqLog();
+const state = emptyThreadState();
+
+function onEvents(batch) {
+  const r = ingestEvents(log, batch);
+  log = r.log;
+  for (const e of r.applied) applyEvent(state, e);
+  if (r.missing) refetch({ after: r.missing.after });
+  render(rowsOf(state));
+}
+```
+
+## Develop
+
+```bash
+npm install
+npm test          # vitest: the conformance fixture, resume, parts, packaging
+npm run lint      # tsc --noEmit
+npm run sabotage  # breaks one clause at a time; the suite must notice each
+```
+
+MIT licence.
