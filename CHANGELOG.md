@@ -50,6 +50,8 @@ version number is not a stability promise until 1.0; read the entry.
     delivered to the agent.
   - `turnsToCancelForBranch(state, supersededId)`: the unsettled turns a
     truncated branch must cancel, through its messages or its approvals.
-    `ApprovalRecord` gains an optional `turnId`. It ships as
+    `ApprovalRecord` gains an optional `turnId`.
+  - Installable from git: `prepare` builds `dist/`, so
+    `npm install github:Particle-Academy/fancy-chat-js#<sha>` works before a release. It ships as
     `@particle-academy/fancy-chat-js/scripts/check-no-prism.mjs`, so every other
     core chat package runs this one checker rather than a copy.

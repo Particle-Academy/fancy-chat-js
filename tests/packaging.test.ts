@@ -41,3 +41,12 @@ describe("no Prism in the core (owner 2026-11-15)", () => {
     }
   });
 });
+
+describe("installable from git", () => {
+  it("builds dist in prepare, which npm runs for a git dependency", () => {
+    const manifest = JSON.parse(readFileSync(`${root}/package.json`, "utf8"));
+    expect(manifest.scripts.prepare).toBe("npm run build");
+    expect(manifest.scripts.build).toBe("tsup");
+    expect(manifest.files).toContain("dist");
+  });
+});
