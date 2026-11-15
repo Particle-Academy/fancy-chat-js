@@ -26,6 +26,10 @@ both repositories.
 | Delivery | `transitionDelivery`: `sending`, `sent`, `queued`, `steered`, `delivered`, `failed`, `dropped`, `unsent`. |
 | HITL | `transitionApproval`, `optionTone` (tone from the option KIND, never its label), `canDecide` (humans only), `isReservedToolName`, `canSubmitAnswer`, `pickActionable` (one actionable item, in-flight lock). |
 | Status | `deriveAgentStatus(snapshot, config)`: one pure derivation of `not-started`, `starting`, `working`, `cooling`, `idle`, `sleeping`, `parked`, `paused-limit`, `signed-out`, `broken`, each with recovery action ids the host can override. |
+| Typed approval | `matchTypedApproval(text, approval, config)`: OPT-IN per app, off with no phrases by default (`ENGLISH_TYPED_APPROVAL_PHRASES` is there to opt into). Exact phrases after NFKC, case, spacing and trailing-punctuation folding; picks a one-time option only, never "always", never edit. |
+| Undo window | `undoWindow(entry, now)`: time left and whether a revert may still land. Shut at the deadline and on an unreadable one. The projection lets only a human revert. |
+| Plan-step HITL | `checkPlanUpdate(prev, next, approvals)`: a held step releases only through its approval; refused approvals allow only skipped or failed. The projection refuses any other release. |
+| Edit and resend | The projection records each superseded branch in `state.branches`; the HOST's policy decides (branch, the default, keeps it; truncate retracts it on the server). |
 | Projection | `projectThread(events)` / `applyEvent(state, event)`: messages, one merged thinking block per run, tool rows, plans and HITL placements. The state is plain JSON and is the snapshot format. |
 
 ## Two rules the projection enforces

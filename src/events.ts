@@ -48,6 +48,11 @@ const TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2
 const ACTOR_KINDS = new Set(["agent", "human", "system"]);
 const OPTIONAL_IDS = ["runId", "turnId", "parentRunId", "rootRunId"] as const;
 
+/** An ISO 8601 timestamp with a zone, as every `at` and deadline carries. */
+export function isTimestamp(value: unknown): value is string {
+  return typeof value === "string" && TIMESTAMP.test(value);
+}
+
 export function isEventType(type: unknown): boolean {
   return typeof type === "string" && (CORE.has(type) || EXTENSION.test(type));
 }

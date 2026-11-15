@@ -1,6 +1,8 @@
-import { isPlainObject } from "./events";
+import { isPlainObject, isTimestamp } from "./events";
 import { canDecide } from "./hitl";
 import { isSettlingTurnAction, transitionApproval, transitionDelivery, transitionTurn } from "./machines";
+import { checkPlanUpdate } from "./plan";
+import type { UndoEntry } from "./undo";
 import type { Actor, ApprovalRecord, ChatEvent, DeliveryState, Part, QuestionRecord, TurnOutcome, TurnState } from "./types";
 
 export interface MessageEntry {
@@ -56,7 +58,19 @@ export interface PlanEntry {
   steps: PlanStep[];
 }
 
-export type RowKind = "message" | "thinking" | "tool" | "plan" | "approval" | "question";
+export type RowKind = "message" | "thinking" | "tool" | "plan" | "approval" | "question" | "undo";
+
+/**
+ * Edit-and-resend: the rows between a superseded message and the one that
+ * replaced it. The projection records the branch; the HOST's policy decides
+ * what happens to it (branch, the default: keep it, shown on demand; truncate:
+ * the server retracts its messages).
+ */
+export interface BranchEntry {
+  supersededId: string;
+  byId: string;
+  rowIds: string[];
+}
 
 /**
  * The whole projected thread as plain JSON. This IS the snapshot format: a
@@ -74,6 +88,8 @@ export interface ThreadState {
   plans: PlanEntry[];
   approvals: ApprovalRecord[];
   questions: QuestionRecord[];
+  undos: UndoEntry[];
+  branches: BranchEntry[];
 }
 
 export type Row =
@@ -82,10 +98,11 @@ export type Row =
   | ({ kind: "tool"; id: string } & ToolEntry)
   | ({ kind: "plan"; id: string } & PlanEntry)
   | { kind: "approval"; id: string; approvalId: string; state: ApprovalRecord["state"] }
-  | { kind: "question"; id: string; questionId: string; state: NonNullable<QuestionRecord["state"]> };
+  | { kind: "question"; id: string; questionId: string; state: NonNullable<QuestionRecord["state"]> }
+  | ({ kind: "undo"; id: string } & UndoEntry);
 
 export function emptyThreadState(): ThreadState {
-  return { lastSeq: 0, illegal: 0, order: [], messages: [], turns: [], thinking: [], tools: [], plans: [], approvals: [], questions: [] };
+  return { lastSeq: 0, illegal: 0, order: [], messages: [], turns: [], thinking: [], tools: [], plans: [], approvals: [], questions: [], undos: [], branches: [] };
 }
 
 const NO_RUN = "_";
@@ -148,9 +165,13 @@ export function applyEvent(state: ThreadState, event: ChatEvent): boolean {
         retracted: false,
         superseded: false,
       });
+      const targetAt = supersedes ? state.order.findIndex((o) => o.kind === "message" && o.id === supersedes) : -1;
       if (supersedes) {
         const target = byId(state.messages, "id", supersedes);
         if (target) target.superseded = true;
+      }
+      if (supersedes && targetAt >= 0) {
+        state.branches.push({ supersededId: supersedes, byId: m.id, rowIds: state.order.slice(targetAt + 1).map((o) => o.id) });
       }
       state.order.push({ kind: "message", id: m.id });
       break;
@@ -293,6 +314,11 @@ export function applyEvent(state: ThreadState, event: ChatEvent): boolean {
       }
       const runId = event.runId ?? NO_RUN;
       let plan = byId(state.plans, "runId", runId);
+      // A held step releases only through its approval.
+      if (!checkPlanUpdate(plan?.steps ?? [], data.steps as PlanStep[], state.approvals).ok) {
+        illegal();
+        break;
+      }
       if (!plan) {
         plan = { runId, steps: [] };
         state.plans.push(plan);
@@ -407,8 +433,31 @@ export function applyEvent(state: ThreadState, event: ChatEvent): boolean {
       break;
     }
 
+    case "undo.opened": {
+      if (typeof data.actionId !== "string" || typeof data.label !== "string" || !isTimestamp(data.deadline) || byId(state.undos, "actionId", data.actionId)) {
+        illegal();
+        break;
+      }
+      state.undos.push({ actionId: data.actionId, label: data.label, deadline: data.deadline, state: "open" });
+      state.order.push({ kind: "undo", id: data.actionId });
+      break;
+    }
+
+    case "undo.committed":
+    case "undo.reverted": {
+      const entry = byId(state.undos, "actionId", data.actionId);
+      // Only the human reverts; the host (or its timer) commits.
+      const allowed = event.type === "undo.committed" || decidedByActor(event, data.revertedBy);
+      if (!entry || entry.state !== "open" || !allowed) {
+        illegal();
+        break;
+      }
+      entry.state = event.type === "undo.committed" ? "committed" : "reverted";
+      break;
+    }
+
     default:
-      // Runs, usage, agent status, undo, handoff and x-* events carry no row.
+      // Runs, usage, agent status, handoff and x-* events carry no row.
       break;
   }
 
@@ -438,6 +487,9 @@ export function rowsOf(state: ThreadState): Row[] {
     } else if (kind === "question") {
       const q = byId(state.questions, "questionId", id);
       if (q) rows.push({ kind, id, questionId: q.questionId, state: q.state ?? "open" });
+    } else if (kind === "undo") {
+      const u = byId(state.undos, "actionId", id);
+      if (u) rows.push({ kind, id, ...u });
     }
   }
   return rows;

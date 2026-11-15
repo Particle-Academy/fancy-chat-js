@@ -9,7 +9,7 @@ export const MACHINES_PATH = fileURLToPath(new URL("../contract/machines.json", 
 // fails that repository's suite, so "the same fixtures" is a test result rather
 // than a promise. Hashed with CRLF folded to LF, so a Windows checkout with
 // autocrlf reads the same bytes as Linux CI (.gitattributes also pins LF).
-export const FIXTURES_SHA256 = "9e72d5b5896698d7fa75187725912e0b00d15b06a08cd38b38f66f6b43ee55f0";
+export const FIXTURES_SHA256 = "ab07b9fd5bd6965f18eb28d5df31d4265981171d1c75faff3aa1cf75ccd93bc1";
 export const MACHINES_SHA256 = "55db613b7bffa251544a7d8303bca8187e954b851b646d27f9e1a4c4393e4f81";
 
 export const sha256 = (bytes: Buffer) =>

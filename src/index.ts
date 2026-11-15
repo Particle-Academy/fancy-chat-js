@@ -1,5 +1,14 @@
 export * from "./types";
-export { CORE_EVENT_TYPES, isEventType, isPlainObject, validateEvent, type CoreEventType } from "./events";
+export { CORE_EVENT_TYPES, isEventType, isPlainObject, isTimestamp, validateEvent, type CoreEventType } from "./events";
+export {
+  DEFAULT_TYPED_APPROVAL,
+  ENGLISH_TYPED_APPROVAL_PHRASES,
+  matchTypedApproval,
+  normalizePhrase,
+  type TypedApprovalConfig,
+} from "./typed-approval";
+export { undoWindow, type UndoEntry, type UndoState } from "./undo";
+export { PLAN_STEP_STATUSES, checkPlanUpdate, type PlanStepLike, type PlanStepStatus } from "./plan";
 export {
   isSettlingTurnAction,
   machines,
@@ -39,6 +48,7 @@ export {
 export { createSeqLog, ingestEvents, type Gap, type IngestResult, type SeqLog } from "./sequence";
 export {
   applyEvent,
+  type BranchEntry,
   emptyThreadState,
   projectThread,
   rowsOf,

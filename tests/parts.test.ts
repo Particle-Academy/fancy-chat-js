@@ -57,3 +57,14 @@ describe("limits are configurable", () => {
     expect(validatePart(deep, { origin: "agent", limits: { maxDepth: 4 } })).toEqual({ ok: true });
   });
 });
+
+describe("typed approval defaults (owner: opt-in per app)", () => {
+  it("is off, with no phrases, until the host turns it on", async () => {
+    const { DEFAULT_TYPED_APPROVAL, matchTypedApproval } = await import("../src/index");
+    expect(DEFAULT_TYPED_APPROVAL).toEqual({ enabled: false, locale: "en", phrases: {} });
+    const approval = { state: "pending" as const, options: [{ id: "o", kind: "allow-once" as const, label: "Go" }] };
+    expect(matchTypedApproval("approve", approval, { phrases: { en: { approve: ["approve"] } } })).toBeNull();
+    expect(matchTypedApproval("approve", approval, { enabled: true })).toBeNull();
+    expect(matchTypedApproval("approve", approval, { enabled: true, phrases: { en: { approve: ["approve"] } } })).toEqual({ optionId: "o", decision: "approve" });
+  });
+});

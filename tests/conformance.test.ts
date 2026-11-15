@@ -12,6 +12,9 @@ import {
   partToText,
   pickActionable,
   projectThread,
+  checkPlanUpdate,
+  matchTypedApproval,
+  undoWindow,
   transitionApproval,
   transitionDelivery,
   transitionTurn,
@@ -33,7 +36,7 @@ describe("fixture pins", () => {
     const sections = Object.entries(FIXTURES).filter(([, v]) => typeof v === "object" && v !== null && "legs" in (v as object));
     const js = sections.filter(([, v]) => (v as { legs: string[] }).legs.includes("js")).map(([k]) => k);
     expect(js.sort()).toEqual(
-      ["actionable", "approval", "decide", "delivery", "envelope", "optionTone", "parts", "projection", "question", "reservedTools", "sequence", "status", "turn"].sort(),
+      ["actionable", "approval", "decide", "delivery", "envelope", "optionTone", "parts", "planStep", "projection", "question", "reservedTools", "sequence", "status", "turn", "typedApproval", "undo"].sort(),
     );
   });
 });
@@ -124,6 +127,7 @@ describe("projection", () => {
       approvals: p.approvals.map((a) => ({ approvalId: a.approvalId, state: a.state })),
       questions: p.questions.map((q) => ({ questionId: q.questionId, state: q.state })),
       rows: p.rows,
+      ...(c.expect.branches !== undefined ? { branches: p.state.branches } : {}),
     }).toEqual(c.expect);
   });
 });
@@ -150,5 +154,31 @@ describe("sequence log (client leg)", () => {
       missing = r.missing;
     }
     expect({ lastSeq: log.lastSeq, applied, missing }).toEqual(c.expect);
+  });
+});
+
+describe("typed approval", () => {
+  const section = FIXTURES.typedApproval;
+  it.each(named(section.cases, (c) => c.name))("%s", (_n, c) => {
+    const config = { ...section.config, ...(c.config ?? {}) };
+    const approval = {
+      ...section.approval,
+      ...(c.approvalState ? { state: c.approvalState } : {}),
+      ...(c.options ? { options: c.options } : {}),
+    };
+    expect(matchTypedApproval(c.text, approval, config)).toEqual(c.expect);
+  });
+});
+
+describe("undo window", () => {
+  it.each(named(FIXTURES.undo.cases, (c) => c.name))("%s", (_n, c) => {
+    expect(undoWindow(c.entry, Date.parse(c.now))).toEqual(c.expect);
+  });
+});
+
+describe("plan-step HITL", () => {
+  it.each(named(FIXTURES.planStep.cases, (c) => c.name))("%s", (_n, c) => {
+    const r = checkPlanUpdate(c.prev, c.next, FIXTURES.planStep.approvals);
+    expect({ ok: r.ok, error: r.ok ? null : r.error }).toEqual({ ok: c.ok, error: c.error });
   });
 });

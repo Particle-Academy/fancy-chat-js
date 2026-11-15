@@ -34,6 +34,16 @@ version number is not a stability promise until 1.0; read the entry.
   - The shared conformance fixture `conformance/chat-v1.json`, which
     `particle-academy/fancy-chat-php` passes to the same output.
   - A packaging check that fails on any Prism dependency, import or bundled
-    module, with a negative control that proves it fires. It ships as
+    module, with a negative control that proves it fires.
+  - Typed approval (`matchTypedApproval`), opt-in per app: off and with no
+    phrases until the host sets them. A typed phrase picks a one-time option
+    only.
+  - The undo window (`undoWindow`, and `undo.*` rows in the projection). Only
+    a human reverts, and a window closes once.
+  - Plan-step HITL (`checkPlanUpdate`): a held step releases only through its
+    approval, and the projection refuses any other release.
+  - Edit and resend: the projection records each superseded branch in
+    `state.branches` for the host's policy (branch by default, or truncate).
+  - `isTimestamp`, the one timestamp check every `at` and deadline uses. It ships as
     `@particle-academy/fancy-chat-js/scripts/check-no-prism.mjs`, so every other
     core chat package runs this one checker rather than a copy.

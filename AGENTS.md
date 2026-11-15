@@ -22,6 +22,8 @@ dependencies, isomorphic, no Prism import.
 | `src/hitl.ts` | Human-only decisions, reserved tool names, answer checks, single actionable. |
 | `src/status.ts` | `deriveAgentStatus`, pure (it never reads a clock). |
 | `src/sequence.ts` | Client-side replay: dedupe, gap hold, reset. |
+| `src/typed-approval.ts` | The deterministic typed-approval matcher. Off and phraseless by default. |
+| `src/undo.ts`, `src/plan.ts` | The undo window and the held-step release rule. |
 | `src/projection.ts` | The reducer and rows. The state is plain JSON and IS the snapshot format. |
 | `scripts/check-no-prism.mjs` | The packaging check; also run on the build in CI. |
 
