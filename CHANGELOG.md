@@ -8,6 +8,8 @@ version number is not a stability promise until 1.0; read the entry.
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-15
+
 ### Changed
 
 - **`dist/` is committed and there is no `prepare`.** A git install now builds
