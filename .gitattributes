@@ -1,2 +1,4 @@
 conformance/*.json text eol=lf
 contract/*.json text eol=lf
+# Committed build output (installed from git without building): never converted.
+dist/** -text

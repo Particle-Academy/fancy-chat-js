@@ -8,6 +8,15 @@ version number is not a stability promise until 1.0; read the entry.
 
 ## [Unreleased]
 
+### Changed
+
+- **`dist/` is committed and there is no `prepare`.** A git install now builds
+  nothing and installs no devDependencies, so it is quick and unaffected by
+  `ignore-scripts`. Before, every git install ran `prepare`, which installs the
+  package's devDependencies and builds it, and a sibling whose devDependencies are git
+  pins nested those builds (impactium measured 20+ minutes). CI checks the committed
+  `dist/` is the build of the commit. Nothing to do; reinstall to pick it up.
+
 ### Added
 
 - **A turn links to the message that started it.** `turn.started` may carry

@@ -62,19 +62,13 @@ function onEvents(batch) {
 ## Installing from git
 
 Until the first npm publish, install from git over HTTPS, pinned to a commit
-(`git+https://github.com/Particle-Academy/fancy-chat-js.git#<sha>`). npm builds
-`dist` in `prepare`. Under `ignore-scripts=true` it does not, and the package
-arrives without `dist`; no install hook can warn, because `ignore-scripts` skips
-those too. Check with:
-
-```bash
-npx fancy-chat-check-install
-```
-
-It exits 1 and names every `@particle-academy` package whose `main`, `module` or
-`exports` files are missing. npm records such a dependency in the lockfile as
-`git+ssh://git@github.com/...`; a machine without a GitHub key still installs, over
-HTTPS, because the repository is public.
+(`git+https://github.com/Particle-Academy/fancy-chat-js.git#<sha>`). **`dist/` is
+committed**, so a git install builds nothing: there is no `prepare`, npm installs none
+of the devDependencies, and `ignore-scripts=true` changes nothing. CI fails a commit
+whose `dist/` is not the build of that commit. `npx fancy-chat-check-install` still
+checks every `@particle-academy` package's entry files after an install. npm records
+the dependency in the lockfile as `git+ssh://git@github.com/...`; a machine without a
+GitHub key still installs, over HTTPS, because the repository is public.
 
 ## Develop
 

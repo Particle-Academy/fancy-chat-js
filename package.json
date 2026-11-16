@@ -50,7 +50,6 @@
         "test:watch": "vitest",
         "check:no-prism": "node scripts/check-no-prism.mjs",
         "sabotage": "node tests/sabotage.mjs",
-        "prepare": "npm run build",
         "prepublishOnly": "tsup"
     },
     "keywords": [

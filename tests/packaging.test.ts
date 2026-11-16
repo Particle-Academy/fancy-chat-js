@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
@@ -42,11 +43,17 @@ describe("no Prism in the core (owner 2026-11-15)", () => {
   });
 });
 
-describe("installable from git", () => {
-  it("builds dist in prepare, which npm runs for a git dependency", () => {
-    const manifest = JSON.parse(readFileSync(`${root}/package.json`, "utf8"));
-    expect(manifest.scripts.prepare).toBe("npm run build");
-    expect(manifest.scripts.build).toBe("tsup");
-    expect(manifest.files).toContain("dist");
+
+describe("installs from git without building", () => {
+  it("has no prepare script, so npm installs no devDependencies and runs no build for a git dependency", () => {
+    const manifest = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")) as { scripts: Record<string, string> };
+    expect(manifest.scripts.prepare).toBeUndefined();
+    expect(manifest.scripts.prepack).toBeUndefined();
+  });
+
+  it("commits dist: every entry file the manifest names is tracked by git", () => {
+    const tracked = execFileSync("git", ["ls-files", "dist"], { cwd: fileURLToPath(new URL("..", import.meta.url)), encoding: "utf8" }).split(/\r?\n/).filter(Boolean);
+    const manifest = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")) as { main: string; module: string; types: string };
+    for (const entry of [manifest.main, manifest.module, manifest.types]) expect(tracked, entry).toContain(entry.replace(/^\.\//, ""));
   });
 });
