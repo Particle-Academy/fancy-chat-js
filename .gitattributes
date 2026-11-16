@@ -5,3 +5,6 @@ dist/** -text
 # Sources are LF on every checkout: a Windows runner (core.autocrlf=true) would
 # otherwise build CRLF into the committed source maps and metafiles.
 src/** text eol=lf
+# scripts/ and tests/ too: the sabotage sweep patches them by exact text.
+scripts/** text eol=lf
+tests/** text eol=lf
