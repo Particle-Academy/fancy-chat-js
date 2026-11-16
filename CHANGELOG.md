@@ -10,6 +10,12 @@ version number is not a stability promise until 1.0; read the entry.
 
 ### Added
 
+- **A turn links to the message that started it.** `turn.started` may carry
+  `data.messageId`; when that message is in the log, `TurnEntry.messageId` names it
+  and the message's `turnId` is set (unless the message already named a turn).
+  `TurnEntry` gains `messageId` (null when no message started it), so a host can
+  retry a failed turn with its original input. Fixture `38c2c9b3...`; fancy-chat-php
+  takes it.
 - **Several thinking blocks per run, in order.** A run that thinks, calls a tool
   and thinks again now projects two thinking rows around the tool row, instead of
   one block merged above it. Each `ThinkingEntry` has a `thinkingId`: the event's

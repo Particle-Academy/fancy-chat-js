@@ -24,6 +24,12 @@ export interface TurnEntry {
   state: TurnState;
   outcome: TurnOutcome | null;
   reason: string | null;
+  /**
+   * The human message that started this turn (`turn.started` `data.messageId`,
+   * when that message is in the log), so a host can retry a failed turn with its
+   * original input. Null for a turn no message started.
+   */
+  messageId: string | null;
 }
 
 export interface ThinkingEntry {
@@ -373,7 +379,10 @@ export function applyEvent(state: ThreadState, event: ChatEvent): boolean {
         illegal();
         break;
       }
-      state.turns.push({ turnId: data.turnId, state: "pending", outcome: null, reason: null });
+      const origin = typeof data.messageId === "string" ? byId(state.messages, "id", data.messageId) : undefined;
+      state.turns.push({ turnId: data.turnId, state: "pending", outcome: null, reason: null, messageId: origin ? origin.id : null });
+      // And the other way: the message learns its turn, unless it already named one.
+      if (origin && origin.turnId === null) origin.turnId = data.turnId;
       break;
     }
 

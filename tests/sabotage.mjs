@@ -13,6 +13,10 @@ const root = fileURLToPath(new URL("..", import.meta.url));
 const file = (name) => fileURLToPath(new URL(`../${name}`, import.meta.url));
 
 const MUTATIONS = [
+  ["turn forgets its message", "src/projection.ts", "messageId: origin ? origin.id : null });", "messageId: null });"],
+  ["turn links an unknown message", "src/projection.ts", "messageId: origin ? origin.id : null });", "messageId: typeof data.messageId === \"string\" ? data.messageId : null });"],
+  ["message never learns its turn", "src/projection.ts", "      if (origin && origin.turnId === null) origin.turnId = data.turnId;\n", ""],
+  ["a later turn relinks the message", "src/projection.ts", "if (origin && origin.turnId === null) origin.turnId", "if (origin) origin.turnId"],
   ["one thinking block per run", "src/projection.ts", "latest && (latest.live || event.type === \"thinking.completed\") ? latest : undefined;", "latest;"],
   ["explicit thinking id ignored", "src/projection.ts", "const explicit = typeof data.thinkingId === \"string\" ? data.thinkingId : null;", "const explicit = null as string | null;"],
   ["non-string thinking id accepted", "src/projection.ts", "if (data.thinkingId !== undefined && typeof data.thinkingId !== \"string\") {", "if (false) {"],
