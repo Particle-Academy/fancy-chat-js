@@ -8,6 +8,24 @@ version number is not a stability promise until 1.0; read the entry.
 
 ## [Unreleased]
 
+### Fixed
+
+- **`applyEvent` never throws.** A `plan.updated` with a `null` step threw from
+  `checkPlanUpdate` (`step.status` on null). A throw escapes into the client's
+  transport, which reads it as a failed request and retries the same batch, so
+  one bad event stalled an open thread for good while every poll received it.
+  `checkPlanUpdate` now refuses a step that is not an object (`plan.step`, as
+  fancy-chat-php already did), and `applyEvent` is total: anything else it cannot
+  read is counted illegal and the cursor moves past it, as for an illegal
+  transition. Nothing to do.
+
+### Changed
+
+- **Conformance fixture: three new cases, re-pinned in both legs.** A malformed
+  plan step projects as illegal with the cursor advanced, and `planStep` refuses
+  a null or non-object step. fancy-chat-php passes them unchanged. The SHA-256 is
+  now `295439897db175e8040f4a48effd5f55a18817aac342d2d39335dc030c39040b`.
+
 ## [0.1.0] - 2026-11-15
 
 ### Changed

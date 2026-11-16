@@ -73,6 +73,8 @@ const MUTATIONS = [
   ["undo accepts any deadline", "src/undo.ts", "isTimestamp(entry.deadline) ? Date.parse(entry.deadline) : Number.NaN", "Date.parse(entry.deadline)"],
   ["an agent reverts", "src/projection.ts", "event.type === \"undo.committed\" || decidedByActor(event, data.revertedBy)", "true"],
   ["undo closes twice", "src/projection.ts", "if (!entry || entry.state !== \"open\" || !allowed) {", "if (!entry || !allowed) {"],
+  ["a null plan step is read", "src/plan.ts", "if (typeof step !== \"object\" || step === null || Array.isArray(step)) return { ok: false, error: \"plan.step\" };", ""],
+  ["applyEvent throws on what it cannot read", "src/projection.ts", "  try {\n    return reduce(state, event);\n  } catch {\n    state.illegal += 1;\n    state.lastSeq = event.seq;\n    return true;\n  }\n", "  return reduce(state, event);\n"],
   ["held step released while pending", "src/plan.ts", "if (RELEASED_BY.has(approval.state)) continue;", "if (approval.state !== \"deciding\") continue;"],
   ["dropping a held step releases it", "src/plan.ts", "if (!after) return { ok: false, error: \"plan.held\" };", "if (!after) continue;"],
   ["approval id swap releases", "src/plan.ts", "const approval = before.approvalId ? approvals.find((a) => a.approvalId === before.approvalId) : undefined;", "const approval = after.approvalId ? approvals.find((a) => a.approvalId === after.approvalId) : undefined;"],

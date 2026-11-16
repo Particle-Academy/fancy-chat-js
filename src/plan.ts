@@ -26,6 +26,9 @@ export function checkPlanUpdate(
   approvals: readonly { approvalId: string; state: ApprovalState | string }[],
 ): Result {
   for (const step of next) {
+    // A step that is not an object (null, a string) is refused, never read: the
+    // same rule as fancy-chat-php's is_array check.
+    if (typeof step !== "object" || step === null || Array.isArray(step)) return { ok: false, error: "plan.step" };
     if (!(PLAN_STEP_STATUSES as readonly string[]).includes(step.status) || (step.owner !== "agent" && step.owner !== "human")) {
       return { ok: false, error: "plan.step" };
     }

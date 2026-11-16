@@ -573,6 +573,11 @@ declare function emptyThreadState(): ThreadState;
  * Applies one event to the state, in place. Idempotent: an event at or below
  * `lastSeq` changes nothing. Returns whether the event was applied (legal or
  * not). An illegal event bumps `illegal` and leaves every entry untouched.
+ *
+ * Total: it never throws. A malformed event the checks below do not anticipate
+ * is counted illegal and the cursor moves past it, exactly as for an illegal
+ * transition. A throw would escape into the client's transport, which reads it
+ * as a failed request and retries the same batch forever.
  */
 declare function applyEvent(state: ThreadState, event: ChatEvent): boolean;
 /**

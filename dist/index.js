@@ -235,6 +235,7 @@ var RELEASED_BY = /* @__PURE__ */ new Set(["approved", "edited", "applied"]);
 var REFUSED_BY = /* @__PURE__ */ new Set(["rejected", "withdrawn", "expired", "apply-failed"]);
 function checkPlanUpdate(prev, next, approvals) {
   for (const step of next) {
+    if (typeof step !== "object" || step === null || Array.isArray(step)) return { ok: false, error: "plan.step" };
     if (!PLAN_STEP_STATUSES.includes(step.status) || step.owner !== "agent" && step.owner !== "human") {
       return { ok: false, error: "plan.step" };
     }
@@ -599,6 +600,15 @@ function decidedByActor(event, claimed) {
 var byId = (list, key, id) => list.find((x) => x[key] === id);
 function applyEvent(state, event) {
   if (event.seq <= state.lastSeq) return false;
+  try {
+    return reduce(state, event);
+  } catch {
+    state.illegal += 1;
+    state.lastSeq = event.seq;
+    return true;
+  }
+}
+function reduce(state, event) {
   const data = isPlainObject(event.data) ? event.data : {};
   const illegal = () => {
     state.illegal += 1;

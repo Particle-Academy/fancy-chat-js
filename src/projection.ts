@@ -151,9 +151,24 @@ const byId = <T>(list: T[], key: keyof T, id: unknown): T | undefined => list.fi
  * Applies one event to the state, in place. Idempotent: an event at or below
  * `lastSeq` changes nothing. Returns whether the event was applied (legal or
  * not). An illegal event bumps `illegal` and leaves every entry untouched.
+ *
+ * Total: it never throws. A malformed event the checks below do not anticipate
+ * is counted illegal and the cursor moves past it, exactly as for an illegal
+ * transition. A throw would escape into the client's transport, which reads it
+ * as a failed request and retries the same batch forever.
  */
 export function applyEvent(state: ThreadState, event: ChatEvent): boolean {
   if (event.seq <= state.lastSeq) return false;
+  try {
+    return reduce(state, event);
+  } catch {
+    state.illegal += 1;
+    state.lastSeq = event.seq;
+    return true;
+  }
+}
+
+function reduce(state: ThreadState, event: ChatEvent): boolean {
   const data = (isPlainObject(event.data) ? event.data : {}) as Record<string, unknown>;
   const illegal = () => {
     state.illegal += 1;
