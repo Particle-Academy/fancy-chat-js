@@ -8,6 +8,8 @@ version number is not a stability promise until 1.0; read the entry.
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-16
+
 ### Fixed
 
 - **`applyEvent` never throws.** A `plan.updated` with a `null` step threw from
@@ -25,11 +27,6 @@ version number is not a stability promise until 1.0; read the entry.
   plan step projects as illegal with the cursor advanced, and `planStep` refuses
   a null or non-object step. fancy-chat-php passes them unchanged. The SHA-256 is
   now `295439897db175e8040f4a48effd5f55a18817aac342d2d39335dc030c39040b`.
-
-## [0.1.0] - 2026-11-15
-
-### Changed
-
 - **`dist/` is committed and there is no `prepare`.** A git install now builds
   nothing and installs no devDependencies, so it is quick and unaffected by
   `ignore-scripts`. Before, every git install ran `prepare`, which installs the
