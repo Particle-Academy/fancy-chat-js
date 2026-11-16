@@ -1,19 +1,24 @@
 # @particle-academy/fancy-chat-js
 
-The neutral wire contract for the Fancy agent chat framework (council change
-CC-fancy-0042). It is what an agent backend emits, what a server stores and
-replays, and what a chat UI projects into rows. Zero runtime dependencies,
-isomorphic (browser, worker, Node), and **provider-neutral**: it works with any
-agent backend, or none. The Prism ecosystem is an optional addon in
-`@particle-academy/fancy-chat-prism`; this package never imports it, and a
-packaging test enforces that.
+The wire contract of the Fancy agent chat (council change CC-fancy-0042), which is
+built on the Prism ecosystem. A chat turn runs on Prism Harness, and the server
+projects the run (Harness's `g282.1` RunSteps and its run events) into this thread
+log. A server stores and replays the log, and a chat UI projects it into rows. Zero
+runtime dependencies and isomorphic (browser, worker, Node), because the UI reads it
+in the browser.
 
-The PHP twin, `particle-academy/fancy-chat-php`, passes the same conformance
-fixture (`conformance/chat-v1.json`) to the same output, and vendors the same
+It holds no copy of a Prism type. It never reads a RunStep: the server maps them
+(`FancyChat\Prism\HarnessBackend` in fancy-chat-php), and the types those come in
+are `@particle-academy/prism-harness`'s. prism-graph, prism-memory and the other
+extras are optional, and nothing here needs them.
+
+This package is the ONE contract every server implements. The PHP server,
+`particle-academy/fancy-chat-php`, passes the same conformance fixture (`conformance/chat-v1.json`) to the same output, and vendors the same
 transition table (`contract/machines.json`). Both files are pinned by SHA-256 in
-both repositories.
+both repositories. A Node server twin, on `@particle-academy/prism-harness` and
+`@particle-academy/prism-acp`, is next and will run the same fixtures.
 
-**Not yet published.** Status: phase P1 of `.ai/plans/agent-chat-framework.md`.
+**Not yet published.** Design: `.ai/plans/agent-chat-on-prism.md` in the Fancy envelope.
 
 ## What it holds
 
@@ -74,7 +79,7 @@ GitHub key still installs, over HTTPS, because the repository is public.
 
 ```bash
 npm install
-npm test          # vitest: the conformance fixture, resume, parts, packaging
+npm test          # vitest: the conformance fixture, resume, parts, packaging (zero deps)
 npm run lint      # tsc --noEmit
 npm run sabotage  # breaks one clause at a time; the suite must notice each
 ```

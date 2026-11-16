@@ -1,1 +1,0 @@
-{ "name": "negative-control", "private": true, "peerDependencies": { "@particle-academy/prism-acp": ">=0.42.0" } }

@@ -7,8 +7,10 @@ the envelope's `RULES.md` and must never be copied here.
 
 ## What this package is
 
-The neutral agent-chat wire contract v1 (CC-fancy-0042). Zero runtime
-dependencies, isomorphic, no Prism import.
+The agent-chat wire contract v1 (CC-fancy-0042): the thread log a server projects
+Prism Harness runs into. The one contract every server implements (fancy-chat-php
+today, a Node twin next). Zero runtime dependencies and isomorphic, because the UI
+reads it in the browser.
 
 ## Layout
 
@@ -25,7 +27,6 @@ dependencies, isomorphic, no Prism import.
 | `src/typed-approval.ts` | The deterministic typed-approval matcher. Off and phraseless by default. |
 | `src/undo.ts`, `src/plan.ts` | The undo window and the held-step release rule. |
 | `src/projection.ts` | The reducer and rows. The state is plain JSON and IS the snapshot format. |
-| `scripts/check-no-prism.mjs` | The packaging check; also run on the build in CI. |
 
 ## Invariants (each has a test, and a sabotage entry that proves it)
 
@@ -41,12 +42,12 @@ dependencies, isomorphic, no Prism import.
 4. **The reducer is idempotent.** An event at or below `lastSeq` is a no-op.
    Illegal events bump `illegal` and change nothing else.
 5. **Agent-origin parts can never be HITL parts or raw ECharts options.**
-6. **Never import Prism, and keep zero runtime dependencies.**
+6. **Keep zero runtime dependencies, and import only own modules.** It runs in
+   browsers and workers. Prism's types are not copied here; nothing here reads them.
 7. **PHP parity.** Rows, turns and the snapshot must come out identical in PHP:
    every field is present, `null` rather than absent. Do not add an optional
    field to a row.
 
 ## Commands
 
-`npm test`, `npm run lint`, `npm run build`, `node tests/sabotage.mjs`,
-`node scripts/check-no-prism.mjs --built` (after a build).
+`npm test`, `npm run lint`, `npm run build`, `node tests/sabotage.mjs`.

@@ -8,6 +8,27 @@ version number is not a stability promise until 1.0; read the entry.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-16
+
+Never published; 0.2.0 because an export path is removed.
+
+### Changed
+
+- **Reframed: built on Prism, not provider-neutral.** The owner's ruling on
+  CC-fancy-0042 was misread as "no Prism in the core". It meant the extras
+  (prism-graph, prism-memory, the browser) are optional; the chat itself is
+  built on Prism Harness (owner, 2026-11-16). This package is the thread log a
+  server projects Harness runs into, and the one contract every server
+  implements. The code is unchanged: it never read a Prism type, so there was
+  nothing to swap for `@particle-academy/prism-harness`'s. It keeps zero runtime
+  dependencies, because the UI reads it in the browser. Nothing to do.
+
+### Removed
+
+- **BREAKING: `./scripts/check-no-prism.mjs`, its export path, `npm run
+  check:no-prism`, its packaging fixtures and its CI step.** The rule it enforced
+  is withdrawn. If a package called it (fancy-chat-ui 0.1 did), drop the call.
+
 ## [0.1.0] - 2026-11-16
 
 ### Fixed

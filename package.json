@@ -1,7 +1,7 @@
 {
     "name": "@particle-academy/fancy-chat-js",
-    "version": "0.1.0",
-    "description": "The neutral agent-chat wire contract: v1 run, turn, message and HITL events with gapless per-thread seq and resumable replay, typed message parts with a registry, the turn-state machine, delivery states, HITL records, the agent status vocabulary and a pure thread projection. Zero runtime dependencies, isomorphic, no Prism import. Held to particle-academy/fancy-chat-php by shared conformance fixtures.",
+    "version": "0.2.0",
+    "description": "The agent-chat wire contract: the thread log fancy-chat-php projects Prism Harness runs into. v1 run, turn, message and HITL events with gapless per-thread seq and resumable replay, typed message parts with a registry, the turn-state machine, delivery states, HITL records, the agent status vocabulary and a pure thread projection. Zero runtime dependencies and isomorphic, so it runs in the browser. Held to particle-academy/fancy-chat-php by shared conformance fixtures.",
     "repository": {
         "type": "git",
         "url": "git+https://github.com/Particle-Academy/fancy-chat-js.git"
@@ -25,7 +25,6 @@
         },
         "./contract/machines.json": "./contract/machines.json",
         "./conformance/chat-v1.json": "./conformance/chat-v1.json",
-        "./scripts/check-no-prism.mjs": "./scripts/check-no-prism.mjs",
         "./package.json": "./package.json"
     },
     "bin": {
@@ -35,7 +34,6 @@
         "dist",
         "contract",
         "conformance",
-        "scripts/check-no-prism.mjs",
         "scripts/check-install.mjs",
         "README.md",
         "LICENSE",
@@ -48,7 +46,6 @@
         "lint": "tsc --noEmit",
         "test": "vitest run",
         "test:watch": "vitest",
-        "check:no-prism": "node scripts/check-no-prism.mjs",
         "sabotage": "node tests/sabotage.mjs",
         "prepublishOnly": "tsup"
     },
@@ -56,6 +53,8 @@
         "agent",
         "chat",
         "human-in-the-loop",
+        "prism",
+        "prism-harness",
         "hitl",
         "sse",
         "event-sourcing",

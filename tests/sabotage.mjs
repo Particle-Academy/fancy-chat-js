@@ -90,8 +90,6 @@ const MUTATIONS = [
   ["tool output dropped", "src/projection.ts", 'tool.output = typeof data.output === "string" ? data.output : null;', "tool.output = null;"],
   ["tool output not checked for text", "src/projection.ts", 'tool.output = typeof data.output === "string" ? data.output : null;', "tool.output = (data.output as string) ?? null;"],
   ["tool output language dropped", "src/projection.ts", 'tool.outputLanguage = typeof data.outputLanguage === "string" ? data.outputLanguage : null;', "tool.outputLanguage = null;"],
-  ["packaging check misses source imports", "scripts/check-no-prism.mjs", "if (spec && PRISM.test(spec)) findings.push", "if (false) findings.push"],
-  ["packaging check misses the manifest", "scripts/check-no-prism.mjs", "for (const name of names) if (PRISM.test(name))", "for (const name of names) if (false)"],
 ];
 
 function runSuite() {
