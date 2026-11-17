@@ -6,23 +6,20 @@ is, is in [README.md](./README.md). Notes for working ON this repo's code are in
 
 ## Install
 
-**Not yet published to npm.** Until then, install from git over HTTPS, pinned to a
-commit:
-
 ```bash
-npm install "git+https://github.com/Particle-Academy/fancy-chat-js.git#<sha>"
+npm i @particle-academy/fancy-chat-js
 ```
 
-`dist/` is committed, so a git install builds nothing. After installing,
-`npx fancy-chat-check-install` checks every `@particle-academy` package's entry
-files. Node `>=22`. Zero runtime dependencies.
+With the React surfaces: `npm i @particle-academy/fancy-chat-js @particle-academy/fancy-chat-ui`.
+The Laravel server is `composer require particle-academy/fancy-chat-php`. After
+installing, `npx fancy-chat-check-install` checks every `@particle-academy`
+package's entry files. Node `>=22`. Zero runtime dependencies.
 
 ## Find it on the Fancy MCP server
 
 The catalog server is `https://ui.particle.academy/mcp` (streamable HTTP, no API
-key; MCP id `fancy-ui`). This package is not yet listed there; it appears once
-published. Find it then with `search-backend-packages` (stack `node`) or
-`search-components`.
+key; MCP id `fancy-ui`). This package is listed there: find it with
+`search-backend-packages` (stack `node`).
 
 ## API essentials
 

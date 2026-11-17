@@ -18,13 +18,13 @@ transition table (`contract/machines.json`). Both files are pinned by SHA-256 in
 both repositories. A Node server twin, on `@particle-academy/prism-harness` and
 `@particle-academy/prism-acp`, is next and will run the same fixtures.
 
-**Not yet published.** Design: `.ai/plans/agent-chat-on-prism.md` in the Fancy envelope.
+Design: `.ai/plans/agent-chat-on-prism.md` in the Fancy envelope.
 
 <!-- fancy-agents-note:start -->
-> **For agents.** This package is not listed on the Fancy MCP catalog server
-> yet. The server, `https://ui.particle.academy/mcp` (streamable HTTP, no API key; MCP id
-> `fancy-ui`), lists the released Fancy packages with install commands and
-> docs. How an agent installs and uses this package is in [AGENTS.md](https://github.com/Particle-Academy/fancy-chat-js/blob/main/AGENTS.md).
+> **For agents.** This package is listed on the Fancy MCP catalog server at
+> `https://ui.particle.academy/mcp` (streamable HTTP, no API key; MCP id `fancy-ui`),
+> with install commands and docs, alongside the rest of the kit. How an agent
+> installs and uses this package is in [AGENTS.md](https://github.com/Particle-Academy/fancy-chat-js/blob/main/AGENTS.md).
 <!-- fancy-agents-note:end -->
 
 ## What it holds
@@ -71,16 +71,16 @@ function onEvents(batch) {
 }
 ```
 
-## Installing from git
+## Install
 
-Until the first npm publish, install from git over HTTPS, pinned to a commit
-(`git+https://github.com/Particle-Academy/fancy-chat-js.git#<sha>`). **`dist/` is
-committed**, so a git install builds nothing: there is no `prepare`, npm installs none
-of the devDependencies, and `ignore-scripts=true` changes nothing. CI fails a commit
-whose `dist/` is not the build of that commit. `npx fancy-chat-check-install` still
-checks every `@particle-academy` package's entry files after an install. npm records
-the dependency in the lockfile as `git+ssh://git@github.com/...`; a machine without a
-GitHub key still installs, over HTTPS, because the repository is public.
+```bash
+npm i @particle-academy/fancy-chat-js
+```
+
+With the React surfaces: `npm i @particle-academy/fancy-chat-js @particle-academy/fancy-chat-ui`. The Laravel server is
+`composer require particle-academy/fancy-chat-php`. `npx fancy-chat-check-install` checks every
+`@particle-academy` package's entry files after an install. Node `>=22`. Zero
+runtime dependencies.
 
 ## Develop
 
