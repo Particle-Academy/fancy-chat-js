@@ -15,6 +15,7 @@ version number is not a stability promise until 1.0; read the entry.
   verify, and nothing new it signs ever can. Consumers do nothing.
 
 - **Docs:** the install sections in `AGENTS.md` and the README now use the registries (`npm i @particle-academy/fancy-chat-js @particle-academy/fancy-chat-ui`, `composer require particle-academy/fancy-chat-php`) instead of git installs, and the README's MCP note says the package is listed on the Fancy MCP catalog server. No code changed; nothing to do. npm shows the README and `AGENTS.md` as of the last publish, so the 0.2.0 page keeps the old text until the next release.
+- CI: re-pin org third-party allowlist to 2614224
 
 ## [0.2.0] - 2026-11-16
 
