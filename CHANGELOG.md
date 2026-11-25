@@ -13,6 +13,7 @@ version number is not a stability promise until 1.0; read the entry.
 ### Security
 
 - **`isSuggestionText` no longer uses a polynomial regular expression.** Its padding check was `/^ +| +$/` (code scanning alert 1, js/polynomial-redos), which took about 30 s on a 200,000-character suggestion with a long run of inner spaces. It is now a `startsWith` / `endsWith` check with the same result. Affects 0.3.0 only; upgrade to 0.3.1.
+- **The committed `dist/` carries the fix too.** A git install builds nothing and runs the committed `dist/`, which still held the old pattern after the source fix; it is rebuilt from the fixed source. The npm tarball was never affected (it is built at publish).
 
 ## [0.3.0] - 2026-11-24
 

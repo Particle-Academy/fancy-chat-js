@@ -228,7 +228,7 @@ var FORMAT = /\p{Cf}/gu;
 var SPACES = /\p{Z}+/gu;
 var UNCLEAN = /[\p{Cc}\p{Cf}]/u;
 function isSuggestionText(text) {
-  return typeof text === "string" && text !== "" && !UNCLEAN.test(text) && text === text.replace(/^ +| +$/g, "");
+  return typeof text === "string" && text !== "" && !UNCLEAN.test(text) && !text.startsWith(" ") && !text.endsWith(" ");
 }
 function limit(value, fallback) {
   return typeof value === "number" && Number.isFinite(value) ? Math.max(0, Math.floor(value)) : fallback;
