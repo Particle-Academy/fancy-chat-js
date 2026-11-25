@@ -1,6 +1,6 @@
 {
     "name": "@particle-academy/fancy-chat-js",
-    "version": "0.3.0",
+    "version": "0.3.1",
     "description": "The agent-chat wire contract: the thread log fancy-chat-php projects Prism Harness runs into. v1 run, turn, message and HITL events with gapless per-thread seq and resumable replay, typed message parts with a registry, the turn-state machine, delivery states, HITL records, the agent status vocabulary and a pure thread projection. Zero runtime dependencies and isomorphic, so it runs in the browser. Held to particle-academy/fancy-chat-php by shared conformance fixtures.",
     "repository": {
         "type": "git",

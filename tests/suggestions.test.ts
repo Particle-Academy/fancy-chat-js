@@ -68,5 +68,14 @@ describe("quick replies in the contract", () => {
     expect(isSuggestionText(" padded")).toBe(false);
     expect(isSuggestionText("two" + String.fromCodePoint(10) + "lines")).toBe(false);
     expect(isSuggestionText(7)).toBe(false);
+    expect(isSuggestionText("padded ")).toBe(false);
+    expect(isSuggestionText("a  b")).toBe(true);
+  });
+
+  it("isSuggestionText stays fast on a long run of inner spaces (code scanning alert 1)", () => {
+    const text = "a" + " ".repeat(200000) + "b";
+    const start = performance.now();
+    expect(isSuggestionText(text)).toBe(true);
+    expect(performance.now() - start).toBeLessThan(1000);
   });
 });

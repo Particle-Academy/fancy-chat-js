@@ -37,7 +37,8 @@ const UNCLEAN = /[\p{Cc}\p{Cf}]/u;
 
 /** One clean line: a non-empty string with no control or format characters and no padding. */
 export function isSuggestionText(text: unknown): text is string {
-  return typeof text === "string" && text !== "" && !UNCLEAN.test(text) && text === text.replace(/^ +| +$/g, "");
+  // startsWith/endsWith, not /^ +| +$/: that pattern is polynomial on long runs of spaces (code scanning alert 1).
+  return typeof text === "string" && text !== "" && !UNCLEAN.test(text) && !text.startsWith(" ") && !text.endsWith(" ");
 }
 
 function limit(value: unknown, fallback: number): number {
