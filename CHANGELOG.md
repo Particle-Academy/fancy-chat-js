@@ -8,6 +8,8 @@ version number is not a stability promise until 1.0; read the entry.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-24
+
 ### Added
 
 - **Quick replies (CC-fancy-0065): the `suggestions.updated` event.** A server
