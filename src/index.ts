@@ -7,6 +7,15 @@ export {
   normalizePhrase,
   type TypedApprovalConfig,
 } from "./typed-approval";
+export {
+  DEFAULT_SUGGESTION_LIMITS,
+  checkSuggestionItems,
+  isSuggestionText,
+  sanitizeSuggestions,
+  type Suggestion,
+  type SuggestionLimits,
+  type SuggestionsEntry,
+} from "./suggestions";
 export { undoWindow, type UndoEntry, type UndoState } from "./undo";
 export { PLAN_STEP_STATUSES, checkPlanUpdate, type PlanStepLike, type PlanStepStatus } from "./plan";
 export {

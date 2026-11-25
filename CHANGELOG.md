@@ -8,6 +8,27 @@ version number is not a stability promise until 1.0; read the entry.
 
 ## [Unreleased]
 
+### Added
+
+- **Quick replies (CC-fancy-0065): the `suggestions.updated` event.** A server
+  offers a few plain-text next messages after an agent's reply; the projection
+  keeps them in `state.suggestions` (`{ turnId, items: [{ id, text }] } | null`,
+  also returned as `projectThread(...).suggestions`). They belong to ONE turn: only
+  the newest, settled `completed`, takes them, never from a human actor, and the
+  next `turn.started` (or an empty list) clears them. New exports:
+  `sanitizeSuggestions` (what a server runs on model output: strings only, control
+  and format characters out, white space collapsed, empty and duplicate dropped,
+  too long dropped rather than cut, count bounded, typed-approval phrases refused),
+  `checkSuggestionItems`, `isSuggestionText`, `DEFAULT_SUGGESTION_LIMITS`
+  (`{ maxCount: 3, maxChars: 80 }`) and the types `Suggestion`, `SuggestionsEntry`,
+  `SuggestionLimits`. A new `suggestions` section in `conformance/chat-v1.json`
+  holds fancy-chat-php to the same projection and sanitizer.
+  **What to do:** nothing unless you want quick replies. `ThreadState` has a new
+  field, `suggestions`, always present and `null` by default; a snapshot from an
+  older server reads as `null`. If you build a `ThreadState` by hand in TypeScript,
+  add `suggestions: null`. The fixture's hash changed, so a server that vendors
+  `conformance/chat-v1.json` must copy it and re-pin (fancy-chat-php does).
+
 ### Changed
 
 - **CI: the lab-certificate gate verifies against the lab's rotated key list.**

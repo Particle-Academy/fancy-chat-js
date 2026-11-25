@@ -21,6 +21,7 @@ import {
   transitionTurn,
   validateEvent,
   validatePart,
+  sanitizeSuggestions,
   type ChatEvent,
 } from "../src/index";
 import { FIXTURES, FIXTURES_PATH, FIXTURES_SHA256, MACHINES_PATH, MACHINES_SHA256, named, sha256, withDefaults } from "./fixtures";
@@ -37,7 +38,7 @@ describe("fixture pins", () => {
     const sections = Object.entries(FIXTURES).filter(([, v]) => typeof v === "object" && v !== null && "legs" in (v as object));
     const js = sections.filter(([, v]) => (v as { legs: string[] }).legs.includes("js")).map(([k]) => k);
     expect(js.sort()).toEqual(
-      ["actionable", "approval", "branchTurns", "decide", "delivery", "envelope", "optionTone", "parts", "planStep", "projection", "question", "reservedTools", "sequence", "status", "turn", "typedApproval", "undo"].sort(),
+      ["actionable", "approval", "branchTurns", "decide", "delivery", "envelope", "optionTone", "parts", "planStep", "projection", "question", "reservedTools", "sequence", "status", "suggestions", "turn", "typedApproval", "undo"].sort(),
     );
   });
 });
@@ -189,5 +190,23 @@ describe("truncate: the turns a removed branch must cancel", () => {
   const state = projectThread(events).state;
   it.each(named(FIXTURES.branchTurns.cases, (c) => c.name))("%s", (_n, c) => {
     expect(turnsToCancelForBranch(state, c.supersededId)).toEqual(c.expect);
+  });
+});
+
+describe("quick replies: suggestions.updated", () => {
+  const section = FIXTURES.suggestions;
+  const base = section.base.map((e: Record<string, unknown>) => withDefaults(FIXTURES.projection.defaults, e)) as ChatEvent[];
+  it.each(named(section.cases, (c) => c.name))("%s", (_n, c) => {
+    const events = c.events.map((e: Record<string, unknown>) => withDefaults(FIXTURES.projection.defaults, e)) as ChatEvent[];
+    const p = projectThread([...base, ...events]);
+    expect({ illegal: p.illegal, suggestions: p.suggestions }).toEqual(c.expect);
+    expect(p.state.suggestions).toEqual(c.expect.suggestions);
+  });
+});
+
+describe("quick replies: sanitize", () => {
+  const section = FIXTURES.suggestions;
+  it.each(named(section.sanitize, (c) => c.name))("%s", (_n, c) => {
+    expect(sanitizeSuggestions(c.input, c.limits ?? section.limits, c.refuse ?? [])).toEqual(c.expect);
   });
 });

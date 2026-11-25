@@ -38,6 +38,13 @@ key; MCP id `fancy-ui`). This package is listed there: find it with
   `optionTone`. **Status:** `deriveAgentStatus(snapshot, config)`.
 - **Opt-in helpers:** `matchTypedApproval` (off, no phrases by default),
   `undoWindow`, `checkPlanUpdate`.
+- **Quick replies:** the `suggestions.updated` event
+  (`data: { turnId, items: [{ id, text }] }`) sets `state.suggestions`
+  (`{ turnId, items } | null`, also on `projectThread(...).suggestions`).
+  `sanitizeSuggestions(raw, limits?, refuse?)` is what a server runs on model output
+  before appending (`DEFAULT_SUGGESTION_LIMITS` is `{ maxCount: 3, maxChars: 80 }`);
+  `checkSuggestionItems` and `isSuggestionText` are the projection's own checks.
+  Types: `Suggestion`, `SuggestionsEntry`, `SuggestionLimits`.
 
 The usage example in the README shows the ingest, apply and render loop.
 
@@ -51,3 +58,9 @@ The usage example in the README shows the ingest, apply and render loop.
   part of either kind fails validation, and so do raw ECharts options: an agent may
   only send the neutral chart spec.
 - `seq` is per thread, monotonic and gapless, and is the only ordering.
+- **Quick replies belong to ONE settled turn.** `suggestions.updated` is legal only
+  for the newest turn, settled `completed`, from an agent or the server; a human's,
+  an older turn's, or one for a turn that parked, failed or was cancelled is counted
+  illegal. The next `turn.started` clears them, and so does an empty list. Items are
+  plain text: render them as text, and send a pick as an ordinary message. Nothing
+  in the contract lets a suggestion decide, answer or call a tool.

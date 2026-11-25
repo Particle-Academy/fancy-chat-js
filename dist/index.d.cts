@@ -99,7 +99,7 @@ type Result<T = Record<never, never>> = ({
 };
 
 /** The closed set of core event types. Anything else must be `x-<app>.<name>`. */
-declare const CORE_EVENT_TYPES: readonly ["thread.snapshot", "thread.reset", "run.started", "run.finished", "run.failed", "run.cancelled", "turn.started", "turn.transition", "turn.settled", "message.created", "message.updated", "message.retracted", "delivery.changed", "part.started", "part.delta", "part.completed", "thinking.started", "thinking.delta", "thinking.completed", "tool.called", "tool.progress", "tool.result", "plan.updated", "approval.requested", "approval.decided", "approval.applied", "approval.withdrawn", "question.asked", "question.answered", "undo.opened", "undo.committed", "undo.reverted", "agent.status", "usage", "provider.fallback", "control.handoff"];
+declare const CORE_EVENT_TYPES: readonly ["thread.snapshot", "thread.reset", "run.started", "run.finished", "run.failed", "run.cancelled", "turn.started", "turn.transition", "turn.settled", "message.created", "message.updated", "message.retracted", "delivery.changed", "part.started", "part.delta", "part.completed", "thinking.started", "thinking.delta", "thinking.completed", "tool.called", "tool.progress", "tool.result", "plan.updated", "approval.requested", "approval.decided", "approval.applied", "approval.withdrawn", "question.asked", "question.answered", "undo.opened", "undo.committed", "undo.reverted", "agent.status", "usage", "provider.fallback", "control.handoff", "suggestions.updated"];
 type CoreEventType = (typeof CORE_EVENT_TYPES)[number];
 /** An ISO 8601 timestamp with a zone, as every `at` and deadline carries. */
 declare function isTimestamp(value: unknown): value is string;
@@ -150,6 +150,47 @@ declare function matchTypedApproval(text: string, approval: Pick<ApprovalRecord,
     optionId: string;
     decision: Decision;
 } | null;
+
+/**
+ * Quick replies: short, plain-text next messages offered under the agent's
+ * settled reply. Model output shown to a person, so the contract holds them to
+ * plain text with stable ids, and a pick is only ever an ordinary human message
+ * (or a composer fill): nothing here can decide, answer or call a tool.
+ */
+interface Suggestion {
+    /** Stable within the list: `s1`, `s2`... in order. */
+    id: string;
+    /** One line of plain text. Render it as text, never as markdown or HTML. */
+    text: string;
+}
+/** The thread's current quick replies, scoped to the ONE settled turn they follow. */
+interface SuggestionsEntry {
+    turnId: string;
+    items: Suggestion[];
+}
+interface SuggestionLimits {
+    /** Suggestions kept. Default 3. */
+    maxCount: number;
+    /** Characters (code points) in one suggestion. Longer ones are dropped, never cut. Default 80. */
+    maxChars: number;
+}
+declare const DEFAULT_SUGGESTION_LIMITS: SuggestionLimits;
+/** One clean line: a non-empty string with no control or format characters and no padding. */
+declare function isSuggestionText(text: unknown): text is string;
+/**
+ * What a server runs on the model's output before appending anything: strings
+ * only; control characters become spaces, format characters (zero-width, bidi
+ * overrides) are removed, white space collapses and the ends are trimmed; empty
+ * and duplicate items are dropped; one longer than `maxChars` is dropped, never
+ * cut; at most `maxCount` are kept; and a `refuse`d phrase (normalised as typed
+ * approval normalises, so "Approve." matches "approve") is dropped, so a pick can
+ * never read as a typed decision.
+ */
+declare function sanitizeSuggestions(raw: unknown, limits?: Partial<SuggestionLimits>, refuse?: readonly string[]): Suggestion[];
+/** Checks a `suggestions.updated` item list: plain objects, unique non-empty ids, clean text. */
+declare function checkSuggestionItems(items: unknown): Result<{
+    items: Suggestion[];
+}>;
 
 type UndoState = "open" | "committed" | "reverted";
 interface UndoEntry {
@@ -542,6 +583,11 @@ interface ThreadState {
     questions: QuestionRecord[];
     undos: UndoEntry[];
     branches: BranchEntry[];
+    /**
+     * Quick replies for the newest turn, once it settled `completed`; null when there
+     * are none. Set by `suggestions.updated`, cleared by the next `turn.started`.
+     */
+    suggestions: SuggestionsEntry | null;
 }
 type Row = ({
     kind: "message";
@@ -596,9 +642,11 @@ interface ThreadProjection {
     turns: TurnEntry[];
     approvals: ApprovalRecord[];
     questions: QuestionRecord[];
+    /** `state.suggestions`: the newest settled turn's quick replies, or null. */
+    suggestions: SuggestionsEntry | null;
     state: ThreadState;
 }
 /** Pure: folds events, in the order given, into the projected thread. */
 declare function projectThread(events: readonly ChatEvent[], initial?: ThreadState): ThreadProjection;
 
-export { AGENT_STATUSES, type Actor, type ActorKind, type AgentSnapshot, type AgentStatus, type AgentStatusName, type AnswerDraft, type ApprovalOption, type ApprovalRecord, type ApprovalState, type BranchEntry, CHART_TYPES, CONTRACT_VERSION, CORE_EVENT_TYPES, CORE_PART_KINDS, type ChatEvent, type CoreEventType, DEFAULT_PART_LIMITS, DEFAULT_RECOVERY, DEFAULT_STATUS_CONFIG, DEFAULT_TYPED_APPROVAL, type Decision, type DeliveryState, ENGLISH_TYPED_APPROVAL_PHRASES, type Gap, type HitlItem, type IngestResult, type MessageEntry, type OptionKind, type OptionTone, PLAN_STEP_STATUSES, type Part, type PartContext, type PartDefinition, type PartLimits, type PartOrigin, type PartRegistry, type PlanEntry, type PlanStep, type PlanStepLike, type PlanStepStatus, type QuestionField, type QuestionFieldType, type QuestionRecord, type Result, type Row, type RowKind, type SeqLog, type SimpleTransition, type StatusConfig, type TextPart, type ThinkingEntry, type ThreadProjection, type ThreadState, type ToolEntry, type TurnEntry, type TurnOutcome, type TurnState, type TurnTransition, type TypedApprovalConfig, type UndoEntry, type UndoState, applyEvent, canDecide, canSubmitAnswer, checkPlanUpdate, createPartRegistry, createSeqLog, deriveAgentStatus, emptyThreadState, ingestEvents, isEventType, isPlainObject, isReservedToolName, isSettlingTurnAction, isTimestamp, jsonBytes, machines, matchTypedApproval, normalizePhrase, optionTone, partToText, pickActionable, projectThread, rowsOf, transitionApproval, transitionDelivery, transitionTurn, turnsToCancelForBranch, undoWindow, validateEvent, validatePart, validateParts };
+export { AGENT_STATUSES, type Actor, type ActorKind, type AgentSnapshot, type AgentStatus, type AgentStatusName, type AnswerDraft, type ApprovalOption, type ApprovalRecord, type ApprovalState, type BranchEntry, CHART_TYPES, CONTRACT_VERSION, CORE_EVENT_TYPES, CORE_PART_KINDS, type ChatEvent, type CoreEventType, DEFAULT_PART_LIMITS, DEFAULT_RECOVERY, DEFAULT_STATUS_CONFIG, DEFAULT_SUGGESTION_LIMITS, DEFAULT_TYPED_APPROVAL, type Decision, type DeliveryState, ENGLISH_TYPED_APPROVAL_PHRASES, type Gap, type HitlItem, type IngestResult, type MessageEntry, type OptionKind, type OptionTone, PLAN_STEP_STATUSES, type Part, type PartContext, type PartDefinition, type PartLimits, type PartOrigin, type PartRegistry, type PlanEntry, type PlanStep, type PlanStepLike, type PlanStepStatus, type QuestionField, type QuestionFieldType, type QuestionRecord, type Result, type Row, type RowKind, type SeqLog, type SimpleTransition, type StatusConfig, type Suggestion, type SuggestionLimits, type SuggestionsEntry, type TextPart, type ThinkingEntry, type ThreadProjection, type ThreadState, type ToolEntry, type TurnEntry, type TurnOutcome, type TurnState, type TurnTransition, type TypedApprovalConfig, type UndoEntry, type UndoState, applyEvent, canDecide, canSubmitAnswer, checkPlanUpdate, checkSuggestionItems, createPartRegistry, createSeqLog, deriveAgentStatus, emptyThreadState, ingestEvents, isEventType, isPlainObject, isReservedToolName, isSettlingTurnAction, isSuggestionText, isTimestamp, jsonBytes, machines, matchTypedApproval, normalizePhrase, optionTone, partToText, pickActionable, projectThread, rowsOf, sanitizeSuggestions, transitionApproval, transitionDelivery, transitionTurn, turnsToCancelForBranch, undoWindow, validateEvent, validatePart, validateParts };

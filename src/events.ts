@@ -38,6 +38,7 @@ export const CORE_EVENT_TYPES = [
   "usage",
   "provider.fallback",
   "control.handoff",
+  "suggestions.updated",
 ] as const;
 
 export type CoreEventType = (typeof CORE_EVENT_TYPES)[number];

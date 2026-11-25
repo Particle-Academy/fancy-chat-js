@@ -38,7 +38,8 @@ var CORE_EVENT_TYPES = [
   "agent.status",
   "usage",
   "provider.fallback",
-  "control.handoff"
+  "control.handoff",
+  "suggestions.updated"
 ];
 var CORE = new Set(CORE_EVENT_TYPES);
 var EXTENSION = /^x-[a-z0-9][a-z0-9-]*\.[a-z0-9][a-z0-9._-]*$/;
@@ -218,6 +219,51 @@ function matchTypedApproval(text, approval, config = {}) {
   if (!decision) return null;
   const option = pick(approval.options ?? [], decision);
   return option ? { optionId: option.id, decision } : null;
+}
+
+// src/suggestions.ts
+var DEFAULT_SUGGESTION_LIMITS = { maxCount: 3, maxChars: 80 };
+var CONTROL = /\p{Cc}/gu;
+var FORMAT = /\p{Cf}/gu;
+var SPACES = /\p{Z}+/gu;
+var UNCLEAN = /[\p{Cc}\p{Cf}]/u;
+function isSuggestionText(text) {
+  return typeof text === "string" && text !== "" && !UNCLEAN.test(text) && text === text.replace(/^ +| +$/g, "");
+}
+function limit(value, fallback) {
+  return typeof value === "number" && Number.isFinite(value) ? Math.max(0, Math.floor(value)) : fallback;
+}
+function clean(text) {
+  return text.replace(CONTROL, " ").replace(FORMAT, "").replace(SPACES, " ").replace(/^ | $/g, "");
+}
+function sanitizeSuggestions(raw, limits = {}, refuse = []) {
+  if (!Array.isArray(raw)) return [];
+  const maxCount = limit(limits.maxCount, DEFAULT_SUGGESTION_LIMITS.maxCount);
+  const maxChars = limit(limits.maxChars, DEFAULT_SUGGESTION_LIMITS.maxChars);
+  const refused = new Set(refuse.filter((p) => typeof p === "string").map(normalizePhrase).filter((p) => p !== ""));
+  const seen = /* @__PURE__ */ new Set();
+  const out = [];
+  for (const item of raw) {
+    if (out.length >= maxCount) break;
+    if (typeof item !== "string") continue;
+    const text = clean(item);
+    if (text === "" || [...text].length > maxChars || seen.has(text) || refused.has(normalizePhrase(text))) continue;
+    seen.add(text);
+    out.push({ id: `s${out.length + 1}`, text });
+  }
+  return out;
+}
+function checkSuggestionItems(items) {
+  if (!Array.isArray(items)) return { ok: false, error: "suggestions.items" };
+  const ids = /* @__PURE__ */ new Set();
+  const out = [];
+  for (const item of items) {
+    if (!isPlainObject(item) || typeof item.id !== "string" || item.id === "" || ids.has(item.id)) return { ok: false, error: "suggestions.id" };
+    if (!isSuggestionText(item.text)) return { ok: false, error: "suggestions.text" };
+    ids.add(item.id);
+    out.push({ id: item.id, text: item.text });
+  }
+  return { ok: true, items: out };
 }
 
 // src/undo.ts
@@ -588,7 +634,7 @@ function ingestEvents(log, events) {
 
 // src/projection.ts
 function emptyThreadState() {
-  return { lastSeq: 0, illegal: 0, order: [], messages: [], turns: [], thinking: [], tools: [], plans: [], approvals: [], questions: [], undos: [], branches: [] };
+  return { lastSeq: 0, illegal: 0, order: [], messages: [], turns: [], thinking: [], tools: [], plans: [], approvals: [], questions: [], undos: [], branches: [], suggestions: null };
 }
 var NO_RUN = "_";
 function clone(value) {
@@ -819,6 +865,7 @@ function reduce(state, event) {
       const origin = typeof data.messageId === "string" ? byId(state.messages, "id", data.messageId) : void 0;
       state.turns.push({ turnId: data.turnId, state: "pending", outcome: null, reason: null, messageId: origin ? origin.id : null });
       if (origin && origin.turnId === null) origin.turnId = data.turnId;
+      state.suggestions = null;
       break;
     }
     case "turn.transition":
@@ -929,6 +976,16 @@ function reduce(state, event) {
       entry.state = event.type === "undo.committed" ? "committed" : "reverted";
       break;
     }
+    case "suggestions.updated": {
+      const last = state.turns.length > 0 ? state.turns[state.turns.length - 1] : void 0;
+      const checked = checkSuggestionItems(data.items);
+      if (event.actor.kind === "human" || typeof data.turnId !== "string" || !last || last.turnId !== data.turnId || last.outcome !== "completed" || !checked.ok) {
+        illegal();
+        break;
+      }
+      state.suggestions = checked.items.length > 0 ? { turnId: data.turnId, items: checked.items } : null;
+      break;
+    }
   }
   state.lastSeq = event.seq;
   return true;
@@ -973,9 +1030,9 @@ function rowsOf(state) {
 function projectThread(events, initial) {
   const state = initial ? clone(initial) : emptyThreadState();
   for (const event of events) applyEvent(state, event);
-  return { lastSeq: state.lastSeq, illegal: state.illegal, rows: rowsOf(state), turns: state.turns, approvals: state.approvals, questions: state.questions, state };
+  return { lastSeq: state.lastSeq, illegal: state.illegal, rows: rowsOf(state), turns: state.turns, approvals: state.approvals, questions: state.questions, suggestions: state.suggestions ?? null, state };
 }
 
-export { AGENT_STATUSES, CHART_TYPES, CONTRACT_VERSION, CORE_EVENT_TYPES, CORE_PART_KINDS, DEFAULT_PART_LIMITS, DEFAULT_RECOVERY, DEFAULT_STATUS_CONFIG, DEFAULT_TYPED_APPROVAL, ENGLISH_TYPED_APPROVAL_PHRASES, PLAN_STEP_STATUSES, applyEvent, canDecide, canSubmitAnswer, checkPlanUpdate, createPartRegistry, createSeqLog, deriveAgentStatus, emptyThreadState, ingestEvents, isEventType, isPlainObject, isReservedToolName, isSettlingTurnAction, isTimestamp, jsonBytes, machines, matchTypedApproval, normalizePhrase, optionTone, partToText, pickActionable, projectThread, rowsOf, transitionApproval, transitionDelivery, transitionTurn, turnsToCancelForBranch, undoWindow, validateEvent, validatePart, validateParts };
+export { AGENT_STATUSES, CHART_TYPES, CONTRACT_VERSION, CORE_EVENT_TYPES, CORE_PART_KINDS, DEFAULT_PART_LIMITS, DEFAULT_RECOVERY, DEFAULT_STATUS_CONFIG, DEFAULT_SUGGESTION_LIMITS, DEFAULT_TYPED_APPROVAL, ENGLISH_TYPED_APPROVAL_PHRASES, PLAN_STEP_STATUSES, applyEvent, canDecide, canSubmitAnswer, checkPlanUpdate, checkSuggestionItems, createPartRegistry, createSeqLog, deriveAgentStatus, emptyThreadState, ingestEvents, isEventType, isPlainObject, isReservedToolName, isSettlingTurnAction, isSuggestionText, isTimestamp, jsonBytes, machines, matchTypedApproval, normalizePhrase, optionTone, partToText, pickActionable, projectThread, rowsOf, sanitizeSuggestions, transitionApproval, transitionDelivery, transitionTurn, turnsToCancelForBranch, undoWindow, validateEvent, validatePart, validateParts };
 //# sourceMappingURL=index.js.map
 //# sourceMappingURL=index.js.map

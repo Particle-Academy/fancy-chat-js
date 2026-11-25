@@ -2,6 +2,7 @@ import { isPlainObject, isTimestamp } from "./events";
 import { canDecide } from "./hitl";
 import { isSettlingTurnAction, transitionApproval, transitionDelivery, transitionTurn } from "./machines";
 import { checkPlanUpdate } from "./plan";
+import { checkSuggestionItems, type SuggestionsEntry } from "./suggestions";
 import type { UndoEntry } from "./undo";
 import type { Actor, ApprovalRecord, ChatEvent, DeliveryState, Part, QuestionRecord, TurnOutcome, TurnState } from "./types";
 
@@ -115,6 +116,11 @@ export interface ThreadState {
   questions: QuestionRecord[];
   undos: UndoEntry[];
   branches: BranchEntry[];
+  /**
+   * Quick replies for the newest turn, once it settled `completed`; null when there
+   * are none. Set by `suggestions.updated`, cleared by the next `turn.started`.
+   */
+  suggestions: SuggestionsEntry | null;
 }
 
 export type Row =
@@ -127,7 +133,7 @@ export type Row =
   | ({ kind: "undo"; id: string } & UndoEntry);
 
 export function emptyThreadState(): ThreadState {
-  return { lastSeq: 0, illegal: 0, order: [], messages: [], turns: [], thinking: [], tools: [], plans: [], approvals: [], questions: [], undos: [], branches: [] };
+  return { lastSeq: 0, illegal: 0, order: [], messages: [], turns: [], thinking: [], tools: [], plans: [], approvals: [], questions: [], undos: [], branches: [], suggestions: null };
 }
 
 const NO_RUN = "_";
@@ -398,6 +404,8 @@ function reduce(state: ThreadState, event: ChatEvent): boolean {
       state.turns.push({ turnId: data.turnId, state: "pending", outcome: null, reason: null, messageId: origin ? origin.id : null });
       // And the other way: the message learns its turn, unless it already named one.
       if (origin && origin.turnId === null) origin.turnId = data.turnId;
+      // Quick replies belong to the turn they follow; a new turn retires them.
+      state.suggestions = null;
       break;
     }
 
@@ -520,6 +528,26 @@ function reduce(state: ThreadState, event: ChatEvent): boolean {
       break;
     }
 
+    case "suggestions.updated": {
+      // Only for the NEWEST turn, settled completed, and never from a human: a
+      // suggestion is offered to the person, it is not something a person sets.
+      const last = state.turns.length > 0 ? state.turns[state.turns.length - 1] : undefined;
+      const checked = checkSuggestionItems(data.items);
+      if (
+        event.actor.kind === "human" ||
+        typeof data.turnId !== "string" ||
+        !last ||
+        last.turnId !== data.turnId ||
+        last.outcome !== "completed" ||
+        !checked.ok
+      ) {
+        illegal();
+        break;
+      }
+      state.suggestions = checked.items.length > 0 ? { turnId: data.turnId, items: checked.items } : null;
+      break;
+    }
+
     default:
       // Runs, usage, agent status, handoff and x-* events carry no row.
       break;
@@ -582,6 +610,8 @@ export interface ThreadProjection {
   turns: TurnEntry[];
   approvals: ApprovalRecord[];
   questions: QuestionRecord[];
+  /** `state.suggestions`: the newest settled turn's quick replies, or null. */
+  suggestions: SuggestionsEntry | null;
   state: ThreadState;
 }
 
@@ -589,5 +619,5 @@ export interface ThreadProjection {
 export function projectThread(events: readonly ChatEvent[], initial?: ThreadState): ThreadProjection {
   const state = initial ? clone(initial) : emptyThreadState();
   for (const event of events) applyEvent(state, event);
-  return { lastSeq: state.lastSeq, illegal: state.illegal, rows: rowsOf(state), turns: state.turns, approvals: state.approvals, questions: state.questions, state };
+  return { lastSeq: state.lastSeq, illegal: state.illegal, rows: rowsOf(state), turns: state.turns, approvals: state.approvals, questions: state.questions, suggestions: state.suggestions ?? null, state };
 }

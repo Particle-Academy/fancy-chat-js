@@ -90,6 +90,22 @@ const MUTATIONS = [
   ["tool output dropped", "src/projection.ts", 'tool.output = typeof data.output === "string" ? data.output : null;', "tool.output = null;"],
   ["tool output not checked for text", "src/projection.ts", 'tool.output = typeof data.output === "string" ? data.output : null;', "tool.output = (data.output as string) ?? null;"],
   ["tool output language dropped", "src/projection.ts", 'tool.outputLanguage = typeof data.outputLanguage === "string" ? data.outputLanguage : null;', "tool.outputLanguage = null;"],
+  ["a human sets suggestions", "src/projection.ts", 'event.actor.kind === "human" ||', ""],
+  ["suggestions for an older turn", "src/projection.ts", "last.turnId !== data.turnId ||", "!state.turns.some((t) => t.turnId === data.turnId) ||"],
+  ["suggestions after a failed turn", "src/projection.ts", 'last.outcome !== "completed" ||', ""],
+  ["suggestion text unchecked", "src/suggestions.ts", 'if (!isSuggestionText(item.text)) return { ok: false, error: "suggestions.text" };', ";"],
+  ["a new turn keeps old suggestions", "src/projection.ts", "      state.suggestions = null;\n      break;", "      break;"],
+  ["an empty list is kept", "src/projection.ts", "state.suggestions = checked.items.length > 0 ?", "state.suggestions = true ?"],
+  ["duplicate suggestion ids", "src/suggestions.ts", 'item.id === "" || ids.has(item.id)', 'item.id === ""'],
+  ["control characters in a suggestion", "src/suggestions.ts", "!UNCLEAN.test(text) &&", ""],
+  ["sanitize keeps control characters", "src/suggestions.ts", 'text.replace(CONTROL, " ")', "text"],
+  ["sanitize keeps format characters", "src/suggestions.ts", '.replace(FORMAT, "")', ""],
+  ["sanitize cuts instead of dropping", "src/suggestions.ts", "[...text].length > maxChars ||", ""],
+  ["sanitize counts UTF-16 units", "src/suggestions.ts", "[...text].length > maxChars", "text.length > maxChars"],
+  ["sanitize ignores the count", "src/suggestions.ts", "if (out.length >= maxCount) break;", ";"],
+  ["sanitize keeps duplicates", "src/suggestions.ts", "seen.has(text) ||", ""],
+  ["sanitize keeps a typed-approval phrase", "src/suggestions.ts", "refused.has(normalizePhrase(text))", "refused.has(text)"],
+  ["sanitize takes non-strings", "src/suggestions.ts", 'if (typeof item !== "string") continue;', "if (item === null) continue;"],
 ];
 
 function runSuite() {

@@ -50,6 +50,11 @@ reads it in the browser.
 7. **PHP parity.** Rows, turns and the snapshot must come out identical in PHP:
    every field is present, `null` rather than absent. Do not add an optional
    field to a row.
+8. **Quick replies belong to one settled turn** (`src/suggestions.ts`, the
+   `suggestions.updated` reducer case). Newest turn, outcome `completed`, never a
+   human actor, items checked by `checkSuggestionItems`; `turn.started` clears them.
+   `sanitizeSuggestions` is shared with fancy-chat-php through the fixture's
+   `suggestions.sanitize` cases, so a change there changes both legs.
 
 ## Commands
 
